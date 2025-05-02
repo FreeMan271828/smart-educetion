@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@Tag(name = "__test__", description = "此API用于测试用户鉴权")
+@Tag(name = "__test__", description = "此API用于测试用户鉴权，稍后可以直接删除")
 @SecurityRequirement(name = "BearerAuth")
 public class TestController {
 

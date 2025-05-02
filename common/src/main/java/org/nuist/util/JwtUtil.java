@@ -42,17 +42,27 @@ public class JwtUtil {
         return extractClaims(token).getSubject();
     }
 
+    /**
+     * 检查token是否过期
+     * @param token JWT token
+     * @return true := 已过期, false := 未过期
+     */
     public boolean isExpired(String token) {
         return extractClaims(token).getExpiration().before(new Date());
     }
 
+    /**
+     * 检查JWT token是否有效
+     * @param token JWT token
+     * @return true := 有效, false := 无效
+     */
     public boolean validateToken(String token) {
         try {
             String username = extractUsername(token);
         } catch (JwtException e) {
             return false;
         }
-        return isExpired(token);
+        return !isExpired(token);
     }
 
 }

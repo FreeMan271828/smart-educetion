@@ -1,5 +1,7 @@
 package org.nuist.service.impl;
 
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import org.nuist.entity.TokenResponse;
 import org.nuist.model.User;
 import org.nuist.service.AuthenticationService;
@@ -27,5 +29,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         );
         User user = (User) authentication.getPrincipal();
         return jwtUtil.generateToken(user.getUsername());
+    }
+
+    @Override
+    public TokenResponse refresh(String refreshToken) {
+        if (!jwtUtil.validateToken(refreshToken)) {
+            throw new JwtException("Invalid JWT refresh token");
+        }
+        String username = jwtUtil.extractUsername(refreshToken);
+        return jwtUtil.generateToken(username);
     }
 }
