@@ -1,9 +1,10 @@
 package org.nuist.service.impl;
 
-import org.nuist.dto.response.TokenResponse;
+import org.nuist.entity.TokenResponse;
 import org.nuist.model.User;
 import org.nuist.service.AuthenticationService;
 import lombok.RequiredArgsConstructor;
+import org.nuist.util.JwtUtil;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -17,7 +18,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     private final AuthenticationManager authenticationManager;
 
-    private final JwtService jwtService;
+    private final JwtUtil jwtUtil;
 
     @Override
     public TokenResponse login(String username, String password) {
@@ -25,6 +26,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 new UsernamePasswordAuthenticationToken(username, password)
         );
         User user = (User) authentication.getPrincipal();
-        return jwtService.generateToken(user.getUsername());
+        return jwtUtil.generateToken(user.getUsername());
     }
 }

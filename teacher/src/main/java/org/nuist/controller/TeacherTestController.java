@@ -14,14 +14,9 @@ import org.springframework.web.bind.annotation.RestController;
 @SecurityRequirement(name = "BearerAuth")
 public class TeacherTestController {
 
-    @GetMapping("/api/test/userResource")
-    public ResponseEntity<String> testUserResource(@AuthenticationPrincipal User user) {
-        return ResponseEntity.ok("Hello user, " + user.getUsername());
-    }
-
-    @PreAuthorize("hasRole('TEACHER')")
-    @GetMapping("/api/test/adminResource")
-    public ResponseEntity<String> testAdminResource(@AuthenticationPrincipal User user) {
+@PreAuthorize("hasRole('TEACHER')")
+    @GetMapping("/api/teacher/test/teacherResource")
+    public ResponseEntity<String> testTeacherResource(@AuthenticationPrincipal User user) {
         return ResponseEntity.ok("Hello Teacher, " + user.getUsername());
     }
 }

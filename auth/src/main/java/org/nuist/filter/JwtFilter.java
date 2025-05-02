@@ -1,7 +1,7 @@
 package org.nuist.filter;
 
 import org.nuist.service.UserService;
-import org.nuist.service.impl.JwtService;
+import org.nuist.util.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,7 +19,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
 
-    private final JwtService jwtService;
+    private final JwtUtil jwtUtil;
     private final UserService userService;
 
     @Override
@@ -33,7 +33,7 @@ public class JwtFilter extends OncePerRequestFilter {
             String authToken = authHeader.substring(7);
             String username;
             try {
-                username = jwtService.extractUsername(authToken);
+                username = jwtUtil.extractUsername(authToken);
             } catch (Exception e) {
                 SecurityContextHolder.clearContext();
                 filterChain.doFilter(request, response);

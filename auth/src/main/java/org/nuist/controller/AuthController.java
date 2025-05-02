@@ -1,7 +1,7 @@
 package org.nuist.controller;
 
 import org.nuist.dto.request.LoginRequestDto;
-import org.nuist.dto.response.TokenResponse;
+import org.nuist.entity.TokenResponse;
 import org.nuist.service.AuthenticationService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

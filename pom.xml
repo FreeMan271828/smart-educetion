@@ -95,10 +95,16 @@
 				<artifactId>spring-boot-starter-security</artifactId>
 				<version>3.4.5</version>
 			</dependency>
+
 			<dependency>
 				<groupId>jakarta.validation</groupId>
 				<artifactId>jakarta.validation-api</artifactId>
 				<version>3.0.2</version>
+			</dependency>
+			<dependency>
+				<groupId>org.zalando</groupId>
+				<artifactId>problem-spring-web-starter</artifactId>
+				<version>0.29.1</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

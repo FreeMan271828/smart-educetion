@@ -1,4 +1,4 @@
-package org.nuist.dto.response;
+package org.nuist.entity;
 
 import lombok.Builder;
 import lombok.Data;

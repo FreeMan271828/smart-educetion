@@ -1,17 +1,16 @@
-package org.nuist.service.impl;
+package org.nuist.util;
 
-import org.nuist.dto.response.TokenResponse;
+import org.nuist.entity.TokenResponse;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
 
 @Service
-public class JwtService {
+public class JwtUtil {
 
     private static final Long expireTime = 252000L;
 
