@@ -1,0 +1,7 @@
+druid:
+  driver: "org.postgresql.Driver"
+  username: "postgres"
+  password: "@Abc123456"
+  url: "jdbc:postgresql://118.89.136.119:5432/smart_edu"
+  initsize: 5
+  minidle: 3
