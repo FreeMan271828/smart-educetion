@@ -59,6 +59,10 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.nuist</groupId>
             <artifactId>common</artifactId>
             <version>0.0.1-SNAPSHOT</version>
