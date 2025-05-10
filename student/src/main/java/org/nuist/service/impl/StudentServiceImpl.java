@@ -7,6 +7,7 @@ import org.nuist.business_object.StudentBO;
 import org.nuist.persist_object.StudentPO;
 import org.nuist.dao.StudentMapper;
 import org.nuist.service.StudentService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -19,14 +20,17 @@ import java.util.stream.Collectors;
  * 学生服务实现类
  */
 @Service
-public class StudentServiceImpl extends ServiceImpl<StudentMapper, StudentPO> implements StudentService {
-    
+public class StudentServiceImpl implements StudentService {
+
+    @Autowired
+    private StudentMapper studentMapper;
+
     @Override
     public StudentBO getStudentById(Long studentId) {
         if (studentId == null) {
             return null;
         }
-        StudentPO studentPO = getById(studentId);
+        StudentPO studentPO = studentMapper.selectById(studentId);
         return studentPO != null ? StudentBO.fromPO(studentPO) : null;
     }
     
@@ -39,7 +43,7 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, StudentPO> im
         LambdaQueryWrapper<StudentPO> queryWrapper = Wrappers.<StudentPO>lambdaQuery()
                 .eq(StudentPO::getUsername, username);
         
-        StudentPO studentPO = getOne(queryWrapper);
+        StudentPO studentPO = studentMapper.selectOne(queryWrapper);
         return studentPO != null ? StudentBO.fromPO(studentPO) : null;
     }
     
@@ -52,7 +56,7 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, StudentPO> im
         LambdaQueryWrapper<StudentPO> queryWrapper = Wrappers.<StudentPO>lambdaQuery()
                 .eq(StudentPO::getEmail, email);
         
-        StudentPO studentPO = getOne(queryWrapper);
+        StudentPO studentPO = studentMapper.selectOne(queryWrapper);
         return studentPO != null ? StudentBO.fromPO(studentPO) : null;
     }
     
@@ -65,7 +69,7 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, StudentPO> im
         LambdaQueryWrapper<StudentPO> queryWrapper = Wrappers.<StudentPO>lambdaQuery()
                 .like(StudentPO::getFullName, fullName);
         
-        List<StudentPO> studentPOList = list(queryWrapper);
+        List<StudentPO> studentPOList = studentMapper.selectList(queryWrapper);
         return convertToBOList(studentPOList);
     }
     
@@ -82,11 +86,11 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, StudentPO> im
             // 新增
             studentPO.setCreatedAt(now);
             studentPO.setUpdatedAt(now);
-            save(studentPO);
+            studentMapper.insert(studentPO);
         } else {
             // 更新
             studentPO.setUpdatedAt(now);
-            updateById(studentPO);
+            studentMapper.updateById(studentPO);
         }
         
         return studentPO.getStudentId();
@@ -108,7 +112,7 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, StudentPO> im
             return new ArrayList<>();
         }
         
-        List<StudentPO> studentPOList = list(queryWrapper);
+        List<StudentPO> studentPOList = studentMapper.selectList(queryWrapper);
         return convertToBOList(studentPOList);
     }
     
@@ -121,7 +125,7 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, StudentPO> im
         LambdaQueryWrapper<StudentPO> queryWrapper = Wrappers.<StudentPO>lambdaQuery()
                 .eq(StudentPO::getUsername, username);
         
-        StudentPO studentPO = getOne(queryWrapper);
+        StudentPO studentPO = studentMapper.selectOne(queryWrapper);
         if (studentPO != null && password.equals(studentPO.getPassword())) {
             return StudentBO.fromPO(studentPO);
         }
@@ -135,11 +139,11 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, StudentPO> im
             return false;
         }
         
-        StudentPO studentPO = getById(studentId);
+        StudentPO studentPO = studentMapper.selectById(studentId);
         if (studentPO != null && oldPassword.equals(studentPO.getPassword())) {
             studentPO.setPassword(newPassword);
             studentPO.setUpdatedAt(LocalDateTime.now());
-            return updateById(studentPO);
+            return studentMapper.updateById(studentPO) > 0;
         }
         
         return false;
@@ -170,7 +174,7 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, StudentPO> im
             return new ArrayList<>();
         }
         
-        List<StudentPO> studentPOList = list(queryWrapper);
+        List<StudentPO> studentPOList = studentMapper.selectList(queryWrapper);
         return convertToBOList(studentPOList);
     }
     
@@ -183,7 +187,7 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, StudentPO> im
         LambdaQueryWrapper<StudentPO> queryWrapper = Wrappers.<StudentPO>lambdaQuery()
                 .eq(StudentPO::getUsername, username);
         
-        return count(queryWrapper) > 0;
+        return studentMapper.selectCount(queryWrapper) > 0;
     }
     
     @Override
@@ -195,7 +199,7 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, StudentPO> im
         LambdaQueryWrapper<StudentPO> queryWrapper = Wrappers.<StudentPO>lambdaQuery()
                 .eq(StudentPO::getEmail, email);
         
-        return count(queryWrapper) > 0;
+        return studentMapper.selectCount(queryWrapper) > 0;
     }
     
     /**

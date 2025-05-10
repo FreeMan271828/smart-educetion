@@ -1,2 +1,14 @@
 server:
+  address: 127.0.0.1
   port: 8082
+
+# SpringDoc配置
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+logging:
+  level:
+    root: debug
