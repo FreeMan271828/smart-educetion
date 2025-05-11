@@ -4,6 +4,8 @@ WORKDIR /app
 # 复制Maven配置文件
 COPY .mvn/ .mvn/
 COPY mvnw mvnw.cmd ./
+# 添加执行权限
+RUN chmod +x mvnw
 COPY pom.xml ./
 
 # 复制所有模块的pom.xml，这有助于利用Docker缓存层
