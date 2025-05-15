@@ -1,6 +1,9 @@
 package org.nuist.service;
 
 import org.nuist.business_object.StudentBO;
+import org.nuist.dto.CreateStudentDTO;
+import org.nuist.entity.TokenResponse;
+
 import java.util.List;
 
 /**
@@ -42,6 +45,13 @@ public interface StudentService {
      * @return 保存后的学生ID
      */
     Long saveOrUpdateStudent(StudentBO studentBO);
+
+    /**
+     * 新学生注册
+     * @param createStudentDTO 注册必要信息
+     * @return JWT token
+     */
+    TokenResponse registerStudent(CreateStudentDTO createStudentDTO);
     
     /**
      * 根据班级和年级获取学生列表

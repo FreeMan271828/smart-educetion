@@ -1,9 +1,15 @@
 package org.nuist.util;
 
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import org.nuist.entity.TokenResponse;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
+import org.nuist.factory.YamlPropertySourceFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -16,14 +22,23 @@ public class JwtUtil {
 
     private static final Long refreshExpireTime = 86400000L;
 
-    private final SecretKey secretKey = Jwts.SIG.HS256.key().build();
+    @Value("${jwts.secretKey}")
+    private String secret;
+
+    private SecretKey secretKey;
+
+    @PostConstruct
+    private SecretKey secretKey() {
+        secretKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret));
+        return secretKey;
+    }
 
     private String buildToken(String subject, long ttlMillis) {
         return Jwts.builder()
                 .subject(subject)
                 .expiration(new Date(System.currentTimeMillis() + ttlMillis))
                 .issuedAt(new Date())
-                .signWith(secretKey)
+                .signWith(secretKey())
                 .compact();
     }
 
@@ -35,7 +50,7 @@ public class JwtUtil {
     }
 
     private Claims extractClaims(String token) {
-        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload();
+        return Jwts.parser().verifyWith(secretKey()).build().parseSignedClaims(token).getPayload();
     }
 
     public String extractUsername(String token) {

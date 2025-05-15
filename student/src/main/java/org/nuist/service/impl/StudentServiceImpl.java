@@ -4,9 +4,14 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.nuist.business_object.StudentBO;
+import org.nuist.dto.CreateStudentDTO;
+import org.nuist.entity.TokenResponse;
+import org.nuist.enums.RoleEnum;
 import org.nuist.persist_object.StudentPO;
 import org.nuist.dao.StudentMapper;
 import org.nuist.service.StudentService;
+import org.nuist.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -20,7 +25,10 @@ import java.util.stream.Collectors;
  */
 @Service
 public class StudentServiceImpl extends ServiceImpl<StudentMapper, StudentPO> implements StudentService {
-    
+
+    @Autowired
+    private UserService userService;
+
     @Override
     public StudentBO getStudentById(Long studentId) {
         if (studentId == null) {
@@ -91,7 +99,19 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, StudentPO> im
         
         return studentPO.getStudentId();
     }
-    
+
+    @Override
+    public TokenResponse registerStudent(CreateStudentDTO createStudentDTO) {
+        StudentPO studentPO = new StudentPO();
+        studentPO.setUsername(createStudentDTO.getUsername());
+        studentPO.setEmail(createStudentDTO.getEmail());
+        studentPO.setFullName(createStudentDTO.getFullName());
+        studentPO.setPhone(createStudentDTO.getPhone());
+        save(studentPO);
+
+        return userService.register(studentPO.getUsername(), createStudentDTO.getPassword(), RoleEnum.STUDENT);
+    }
+
     @Override
     public List<StudentBO> getStudentsByClass(String grade, String className) {
         LambdaQueryWrapper<StudentPO> queryWrapper = Wrappers.<StudentPO>lambdaQuery();

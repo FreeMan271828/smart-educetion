@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.nuist.business_object.TeacherBO;
 import org.nuist.dto.AddTeacherDTO;
 import org.nuist.dto.UpdateTeacherDTO;
+import org.nuist.entity.TokenResponse;
 import org.nuist.service.TeacherService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,8 +30,8 @@ public class TeacherController {
         return ResponseEntity.ok(teacherService.getTeacherByUsername(username));
     }
 
-    @PostMapping("/save")
-    public ResponseEntity<TeacherBO> saveTeacher(@RequestBody AddTeacherDTO addTeacherDTO) {
+    @PostMapping("/register")
+    public ResponseEntity<TokenResponse> saveTeacher(@RequestBody AddTeacherDTO addTeacherDTO) {
         return ResponseEntity.ok(teacherService.saveTeacher(addTeacherDTO));
     }
 

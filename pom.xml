@@ -18,6 +18,7 @@
 		<module>student</module>
 		<module>common</module>
 		<module>teacher</module>
+		<module>app</module>
 	</modules>
 	<packaging>pom</packaging>
 	<properties>

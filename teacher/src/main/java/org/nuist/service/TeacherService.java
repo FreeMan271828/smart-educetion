@@ -3,6 +3,7 @@ package org.nuist.service;
 import org.nuist.business_object.TeacherBO;
 import org.nuist.dto.AddTeacherDTO;
 import org.nuist.dto.UpdateTeacherDTO;
+import org.nuist.entity.TokenResponse;
 
 public interface TeacherService {
 
@@ -20,7 +21,7 @@ public interface TeacherService {
      */
     TeacherBO getTeacherByUsername(String username);
 
-    TeacherBO saveTeacher(AddTeacherDTO addTeacherDTO);
+    TokenResponse saveTeacher(AddTeacherDTO addTeacherDTO);
 
     TeacherBO updateTeacher(UpdateTeacherDTO updateTeacherDTO);
 

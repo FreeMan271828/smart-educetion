@@ -1,8 +1,9 @@
 package org.nuist.service.impl;
 
-import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
+import org.nuist.dto.response.LoginResponseDto;
 import org.nuist.entity.TokenResponse;
+import org.nuist.model.Role;
 import org.nuist.model.User;
 import org.nuist.service.AuthenticationService;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -23,12 +26,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final JwtUtil jwtUtil;
 
     @Override
-    public TokenResponse login(String username, String password) {
+    public LoginResponseDto login(String username, String password) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(username, password)
         );
         User user = (User) authentication.getPrincipal();
-        return jwtUtil.generateToken(user.getUsername());
+//        return jwtUtil.generateToken(user.getUsername());
+        return LoginResponseDto.builder()
+                .tokens(jwtUtil.generateToken(user.getUsername()))
+                .roles(user.getRoles().stream().map(Role::getRoleName).collect(Collectors.toList()))
+                .build();
     }
 
     @Override

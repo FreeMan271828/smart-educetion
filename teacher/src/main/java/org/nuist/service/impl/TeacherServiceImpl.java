@@ -6,10 +6,12 @@ import lombok.RequiredArgsConstructor;
 import org.nuist.business_object.TeacherBO;
 import org.nuist.dto.AddTeacherDTO;
 import org.nuist.dto.UpdateTeacherDTO;
+import org.nuist.entity.TokenResponse;
+import org.nuist.enums.RoleEnum;
 import org.nuist.mapper.TeacherMapper;
 import org.nuist.model.TeacherPO;
 import org.nuist.service.TeacherService;
-import org.springframework.beans.BeanUtils;
+import org.nuist.service.UserService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -20,6 +22,7 @@ import org.springframework.util.StringUtils;
 public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, TeacherPO> implements TeacherService {
 
     private final TeacherMapper teacherMapper;
+    private final UserService userService;
 
     @Override
     public TeacherBO getTeacherById(Long id) {
@@ -48,16 +51,16 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, TeacherPO> im
     }
 
     @Override
-    public TeacherBO saveTeacher(AddTeacherDTO addTeacherDTO) {
+    public TokenResponse saveTeacher(AddTeacherDTO addTeacherDTO) {
         TeacherPO teacher = new TeacherPO();
         teacher.setUsername(addTeacherDTO.getUsername());
-        teacher.setPassword(addTeacherDTO.getPassword());
+//        teacher.setPassword(addTeacherDTO.getPassword());
         teacher.setEmail(addTeacherDTO.getEmail());
         teacher.setPhone(addTeacherDTO.getPhone());
         teacher.setFullName(addTeacherDTO.getFullName());
 
         teacherMapper.insert(teacher);
-        return TeacherBO.fromTeacherPO(teacher);
+        return userService.register(addTeacherDTO.getUsername(), addTeacherDTO.getPassword(), RoleEnum.TEACHER);
     }
 
     @Override
