@@ -10,12 +10,13 @@ import io.jsonwebtoken.Jwts;
 import org.nuist.factory.YamlPropertySourceFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
 
-@Service
+@Component
 public class JwtUtil {
 
     private static final Long expireTime = 252000L;
@@ -38,7 +39,7 @@ public class JwtUtil {
                 .subject(subject)
                 .expiration(new Date(System.currentTimeMillis() + ttlMillis))
                 .issuedAt(new Date())
-                .signWith(secretKey())
+                .signWith(secretKey)
                 .compact();
     }
 
@@ -50,7 +51,7 @@ public class JwtUtil {
     }
 
     private Claims extractClaims(String token) {
-        return Jwts.parser().verifyWith(secretKey()).build().parseSignedClaims(token).getPayload();
+        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload();
     }
 
     public String extractUsername(String token) {
