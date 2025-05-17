@@ -28,11 +28,11 @@ public class CommonSecurityConfigurer extends AbstractHttpConfigurer<CommonSecur
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-//        configuration.setAllowedOrigins(List.of("**"));
-        configuration.setAllowedOriginPatterns(List.of("http://118.89.136.119:[*]", "https://118.89.136.119:[*]"));
+        configuration.setAllowedOrigins(List.of("*"));
+//        configuration.setAllowedOriginPatterns(List.of("http://118.89.136.119:[*]", "https://118.89.136.119:[*]", "http://localhost:[*]", "https://localhost:[*]"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(true);
+//        configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
