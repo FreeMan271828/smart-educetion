@@ -1,5 +1,12 @@
 # smart education backend
 
+**5.16更新内容**
+- 创建了聚合启动模块`app`，并移除了student和teacher模块`pom.xml`中的build插件项（使得仅有`app`模块生成正确打包的fat jar用于运行）
+- 将`student`模块中，一些与鉴权相关的接口移除（包括登录、修改密码、检测用户是否存在），并设置了新的注册接口
+  - 现在设计为：student和teacher都通过唯一的`username`字段与User的`username`相关联，实现一对一关系，且student和teacher中的`password`字段现在在业务中没有实际作用（数据表和数据模型仍保持现有设计）
+- 在`auth`模块中创建了注册方法（会在student/teacher的注册接口最后调用，保存用户信息），设置了修改密码、检查用户存在的接口
+- 将跨域设置为全域放行，方便调试
+
 ## 安全配置模块设计
 > 涉及 common 和 auth 模块
 
