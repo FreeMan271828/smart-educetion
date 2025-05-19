@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 public class TeacherPO {
 
     @TableId(type = IdType.AUTO)
-    private Integer teacherId;
+    private Long teacherId;
 
     private String username;
 

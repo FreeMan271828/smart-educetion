@@ -1,5 +1,6 @@
 package org.nuist.controller;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.nuist.business_object.CourseBO;
 import org.nuist.service.CourseService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,7 @@ import java.util.Map;
  * 课程信息管理控制器
  */
 @RestController
+@SecurityRequirement(name = "BearerAuth")
 @RequestMapping("/api/course")
 public class CourseController {
     

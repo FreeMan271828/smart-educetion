@@ -1,5 +1,6 @@
 package org.nuist.controller;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.nuist.service.StudentAssistantService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,7 @@ import java.util.Map;
  * 学生学习助手控制器
  */
 @RestController
+@SecurityRequirement(name = "BearerAuth")
 @RequestMapping("/api/student-assistant")
 public class StudentAssistantController {
     

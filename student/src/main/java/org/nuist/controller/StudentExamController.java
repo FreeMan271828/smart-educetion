@@ -1,5 +1,6 @@
 package org.nuist.controller;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.nuist.business_object.StudentExamAnswerBO;
 import org.nuist.service.StudentExamService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,7 @@ import java.util.Map;
  * 学生考试答案控制器
  */
 @RestController
+@SecurityRequirement(name = "BearerAuth")
 @RequestMapping("/api/student-exam")
 public class StudentExamController {
     

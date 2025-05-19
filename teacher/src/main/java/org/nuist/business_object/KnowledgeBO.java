@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class KnowledgeBO {
-    private int knowledgeId;
+    private Long knowledgeId;
     private String name;
     private String description;
     private String difficultyLevel;

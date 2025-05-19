@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class TeacherBO {
-    private Integer teacherId;
+    private Long teacherId;
     private String username;
     private String password;
     private String email;

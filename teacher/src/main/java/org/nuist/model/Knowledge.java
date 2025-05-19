@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 public class Knowledge {
 
     @TableId(type = IdType.AUTO)
-    private int knowledgeId;
+    private Long knowledgeId;
 
     /**
      * 知识点名称

@@ -22,6 +22,10 @@ public class ApiSecurityConfiguration {
         http.with(new CommonSecurityConfigurer(), Customizer.withDefaults())
                 .securityMatcher("/api/**")
                 .authorizeHttpRequests(req -> req
+                        .requestMatchers(
+                                "/api/student/register",
+                                "/api/teacher/register"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 ).addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();

@@ -1,5 +1,6 @@
 package org.nuist.controller;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.nuist.service.LearningPlanService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -16,6 +17,7 @@ import java.util.Map;
  * 学习计划控制器
  */
 @RestController
+@SecurityRequirement(name = "BearerAuth")
 @RequestMapping("/api/learning-plan")
 public class LearningPlanController {
     

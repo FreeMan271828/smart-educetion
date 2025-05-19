@@ -9,6 +9,9 @@ import org.nuist.dto.UpdateTeacherDTO;
 import org.nuist.entity.TokenResponse;
 import org.nuist.service.TeacherService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -19,6 +22,12 @@ import org.springframework.web.bind.annotation.*;
 public class TeacherController {
 
     private final TeacherService teacherService;
+
+    @GetMapping("/self")
+    @PreAuthorize("hasRole('TEACHER')")
+    public ResponseEntity<TeacherBO> getTeacherSelf(@AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(teacherService.getTeacherByUsername(userDetails.getUsername()));
+    }
 
     @GetMapping("/{id}")
     public ResponseEntity<TeacherBO> getTeacherById(@PathVariable Long id) {

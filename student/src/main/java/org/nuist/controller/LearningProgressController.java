@@ -1,5 +1,6 @@
 package org.nuist.controller;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.nuist.business_object.LearningProgressBO;
 import org.nuist.service.LearningProgressService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,7 @@ import java.util.Map;
  * 学习进度控制器
  */
 @RestController
+@SecurityRequirement(name = "BearerAuth")
 @RequestMapping("/api/learning-progress")
 public class LearningProgressController {
     

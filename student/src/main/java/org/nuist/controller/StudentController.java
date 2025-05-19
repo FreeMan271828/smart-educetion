@@ -1,11 +1,15 @@
 package org.nuist.controller;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.nuist.business_object.StudentBO;
 import org.nuist.dto.CreateStudentDTO;
 import org.nuist.entity.TokenResponse;
 import org.nuist.service.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -16,11 +20,22 @@ import java.util.Map;
  * 学生信息管理控制器
  */
 @RestController
+@SecurityRequirement(name = "BearerAuth")
 @RequestMapping("/api/student")
 public class StudentController {
     
     @Autowired
     private StudentService studentService;
+
+    @GetMapping("/self")
+    @PreAuthorize("hasRole('STUDENT')")
+    public ResponseEntity<StudentBO> getStudentSelf(@AuthenticationPrincipal UserDetails userDetails) {
+        StudentBO studentBO = studentService.getStudentByUsername(userDetails.getUsername());
+        if (studentBO != null) {
+            return ResponseEntity.ok(studentBO);
+        }
+        return ResponseEntity.notFound().build();
+    }
     
     /**
      * 根据学生ID获取学生信息
