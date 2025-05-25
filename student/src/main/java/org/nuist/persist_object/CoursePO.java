@@ -1,6 +1,7 @@
 package org.nuist.persist_object;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -51,20 +52,17 @@ public class CoursePO  {
     /**
      * 创建时间
      */
+    @TableField("create_time")
     private LocalDateTime createTime;
     
     /**
      * 更新时间
      */
+    @TableField("update_time")
     private LocalDateTime updateTime;
     
     /**
      * 状态(0:禁用,1:启用)
      */
     private Integer status;
-    
-    /**
-     * 备注
-     */
-    private String remark;
 }

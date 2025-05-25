@@ -14,27 +14,27 @@ public class CourseBO {
      * 课程ID
      */
     private Long id;
-    
+
     /**
      * 课程名称
      */
     private String name;
-    
+
     /**
      * 课程代码
      */
     private String code;
-    
+
     /**
      * 课程描述
      */
     private String description;
-    
+
     /**
      * 学分
      */
     private Integer credit;
-    
+
     /**
      * 课程类别
      */
@@ -54,9 +54,4 @@ public class CourseBO {
      * 状态(0:禁用,1:启用)
      */
     private Integer status;
-    
-    /**
-     * 备注
-     */
-    private String remark;
 } 
