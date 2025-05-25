@@ -20,7 +20,7 @@ public class CoursePO  {
     /**
      * 课程ID
      */
-    @TableId(value = "id", type = IdType.AUTO)
+    @TableId(value = "course_id", type = IdType.AUTO)
     private Long id;
     
     /**
