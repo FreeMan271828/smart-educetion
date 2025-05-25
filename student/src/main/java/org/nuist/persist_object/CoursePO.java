@@ -52,13 +52,13 @@ public class CoursePO  {
     /**
      * 创建时间
      */
-    @TableField("create_time")
+    @TableField("create_at")
     private LocalDateTime createTime;
     
     /**
      * 更新时间
      */
-    @TableField("update_time")
+    @TableField("update_at")
     private LocalDateTime updateTime;
     
     /**
