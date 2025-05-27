@@ -1,8 +1,6 @@
 package org.nuist.client;
 
 import org.nuist.bo.ExamBO;
-import org.nuist.dto.AddExamDTO;
-import org.nuist.dto.UpdateExamDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,10 +25,10 @@ public interface ExamClient {
     );
 
     @PostMapping("/api/exam/save")
-    ResponseEntity<ExamBO> saveExam(@RequestBody AddExamDTO addExamDTO);
+    ResponseEntity<ExamBO> saveExam(@RequestBody ExamBO examBo);
 
     @PutMapping("/api/exam/update")
-    ResponseEntity<ExamBO> updateExam(@RequestBody UpdateExamDTO updateExamDTO);
+    ResponseEntity<ExamBO> updateExam(@RequestBody ExamBO examBo);
 
     @DeleteMapping("/api/exam/{id}")
     ResponseEntity<Map<String, Object>> deleteExam(@PathVariable Long id);

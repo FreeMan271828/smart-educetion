@@ -31,7 +31,7 @@ public class StudentExamAnswerPO {
     private String studentAnswer;
     
     @TableField("score")
-    private BigDecimal score;
+    private Double score;
     
     @TableField("feedback")
     private String feedback;

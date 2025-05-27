@@ -164,12 +164,11 @@ public class StudentExamController implements StudentExamClient {
     public ResponseEntity<Map<String, Object>> getExamScoreByTitle(
             @PathVariable("studentId") Long studentId,
             @RequestParam("title") String examTitle) {
-        BigDecimal score = studentExamService.getExamScoreByTitle(studentId, examTitle);
-
+        Map<Long, BigDecimal> scoreMap = studentExamService.getExamScoreByTitle(studentId, examTitle);
         Map<String, Object> result = new HashMap<>();
         result.put("studentId", studentId);
         result.put("examTitle", examTitle);
-        result.put("score", score);
+        result.put("scoreMap", scoreMap);
         return ResponseEntity.ok(result);
     }
 

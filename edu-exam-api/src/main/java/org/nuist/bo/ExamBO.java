@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.nuist.po.Exam;
+import org.nuist.po.ExamPo;
 
 import java.time.LocalDateTime;
 
@@ -19,7 +19,7 @@ public class ExamBO {
     private String description;
     private Long courseId;
     private Long teacherId;
-    private Integer totalScore;
+    private Long totalScore;
     private Integer durationMinutes;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
@@ -27,38 +27,38 @@ public class ExamBO {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public static ExamBO fromExam(Exam exam) {
+    public static ExamBO fromExam(ExamPo examPo) {
         return ExamBO.builder()
-                .examId(exam.getExamId())
-                .title(exam.getTitle())
-                .description(exam.getDescription())
-                .courseId(exam.getCourseId())
-                .teacherId(exam.getTeacherId())
-                .totalScore(exam.getTotalScore())
-                .durationMinutes(exam.getDurationMinutes())
-                .startTime(exam.getStartTime())
-                .endTime(exam.getEndTime())
-                .status(exam.getStatus())
-                .createdAt(exam.getCreatedAt())
-                .updatedAt(exam.getUpdatedAt())
+                .examId(examPo.getExamId())
+                .title(examPo.getTitle())
+                .description(examPo.getDescription())
+                .courseId(examPo.getCourseId())
+                .teacherId(examPo.getTeacherId())
+                .totalScore(examPo.getTotalScore())
+                .durationMinutes(examPo.getDurationMinutes())
+                .startTime(examPo.getStartTime())
+                .endTime(examPo.getEndTime())
+                .status(examPo.getStatus())
+                .createdAt(examPo.getCreatedAt())
+                .updatedAt(examPo.getUpdatedAt())
                 .build();
     }
 
-    public Exam toExam() {
-        Exam exam = new Exam();
-        exam.setExamId(examId);
-        exam.setTitle(title);
-        exam.setDescription(description);
-        exam.setCourseId(courseId);
-        exam.setTeacherId(teacherId);
-        exam.setTotalScore(totalScore);
-        exam.setDurationMinutes(durationMinutes);
-        exam.setStartTime(startTime);
-        exam.setEndTime(endTime);
-        exam.setStatus(status);
-        exam.setCreatedAt(createdAt);
-        exam.setUpdatedAt(updatedAt);
-        return exam;
+    public ExamPo toExam() {
+        ExamPo examPo = new ExamPo();
+        examPo.setExamId(examId);
+        examPo.setTitle(title);
+        examPo.setDescription(description);
+        examPo.setCourseId(courseId);
+        examPo.setTeacherId(teacherId);
+        examPo.setTotalScore(totalScore);
+        examPo.setDurationMinutes(durationMinutes);
+        examPo.setStartTime(startTime);
+        examPo.setEndTime(endTime);
+        examPo.setStatus(status);
+        examPo.setCreatedAt(createdAt);
+        examPo.setUpdatedAt(updatedAt);
+        return examPo;
     }
 
 }

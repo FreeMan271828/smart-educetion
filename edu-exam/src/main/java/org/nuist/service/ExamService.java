@@ -1,8 +1,6 @@
 package org.nuist.service;
 
 import org.nuist.bo.ExamBO;
-import org.nuist.dto.AddExamDTO;
-import org.nuist.dto.UpdateExamDTO;
 
 import java.util.List;
 
@@ -38,17 +36,17 @@ public interface ExamService {
 
     /**
      * 持久化一个考试实体
-     * @param addExamDTO dto
+     * @param examBo dto
      * @return 持久化后的业务对象（附带主键和时间字段）
      */
-    ExamBO saveExam(AddExamDTO addExamDTO);
+    ExamBO saveExam(ExamBO examBo);
 
     /**
      * 更新一个考试
-     * @param updateExamDTO dto，提供必要的更新内容
+     * @param examBo dto，提供必要的更新内容
      * @return 更新后的业务对象
      */
-    ExamBO updateExam(UpdateExamDTO updateExamDTO);
+    ExamBO updateExam(ExamBO examBo);
 
     /**
      * 删除一个指定考试

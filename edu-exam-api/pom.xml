@@ -7,10 +7,10 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>edu-exam-api</artifactId>
+    <artifactId>edu-examPo-api</artifactId>
     <packaging>jar</packaging>
 
-    <name>edu-exam-api</name>
+    <name>edu-examPo-api</name>
     <url>http://maven.apache.org</url>
 
     <properties>
@@ -42,7 +42,6 @@
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-annotation</artifactId>
-            <version>3.5.5</version>
         </dependency>
     </dependencies>
 </project>

@@ -3,7 +3,12 @@ package org.nuist.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.nuist.bo.StudentExamAnswerBO;
+import org.nuist.constant.QuestionType;
+import org.nuist.mapper.ExamMapper;
+import org.nuist.mapper.QuestionMapper;
 import org.nuist.mapper.StudentExamMapper;
+import org.nuist.po.ExamPo;
+import org.nuist.po.QuestionPo;
 import org.nuist.po.StudentExamAnswerPO;
 import org.nuist.service.StudentExamService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,10 +18,7 @@ import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -24,10 +26,16 @@ import java.util.stream.Collectors;
  */
 @Service
 public class StudentExamServiceImpl implements StudentExamService {
-    
+
+    @Autowired
+    private ExamMapper examMapper;
+
     @Autowired
     private StudentExamMapper studentExamMapper;
-    
+
+    @Autowired
+    private QuestionMapper questionMapper;
+
     @Override
     public List<StudentExamAnswerBO> getStudentExamAnswers(Long studentId, Long examId) {
         if (studentId == null || examId == null) {
@@ -48,9 +56,22 @@ public class StudentExamServiceImpl implements StudentExamService {
             return new ArrayList<>();
         }
         
+        // 先查询匹配title的考试ID
+        List<Long> examIds = examMapper.selectList(Wrappers.<ExamPo>query()
+                .select("exam_id")
+                .like("title", "%" + examTitle + "%"))
+                .stream()
+                .map(ExamPo::getExamId)
+                .collect(Collectors.toList());
+        
+        if (examIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        // 根据考试ID查询学生答案
         QueryWrapper<StudentExamAnswerPO> queryWrapper = Wrappers.<StudentExamAnswerPO>query()
                 .eq("student_id", studentId)
-                .like("exam_title", "%" + examTitle + "%");
+                .in("exam_id", examIds);
                 
         List<StudentExamAnswerPO> poList = studentExamMapper.selectList(queryWrapper);
         return convertToBOList(poList);
@@ -122,10 +143,13 @@ public class StudentExamServiceImpl implements StudentExamService {
                 .filter(bo -> bo != null && bo.getStudentId() != null && 
                         bo.getExamId() != null && bo.getQuestionId() != null)
                 .map(bo -> {
+                    Long totalPoint = questionMapper.selectById(bo.getQuestionId()).getScorePoints();
                     if (bo.getCreatedAt() == null) {
                         bo.setCreatedAt(now);
                     }
                     bo.setUpdatedAt(now);
+                    double rate = judgeQuestionIfCorrect(bo.getQuestionId(), bo.getStudentAnswer());
+                    bo.setScore(rate * totalPoint);
                     return bo.toPO();
                 })
                 .collect(Collectors.toList());
@@ -133,7 +157,6 @@ public class StudentExamServiceImpl implements StudentExamService {
         if (poList.isEmpty()) {
             return 0;
         }
-        
         // 逐个插入或更新
         int count = 0;
         for (StudentExamAnswerPO po : poList) {
@@ -162,18 +185,41 @@ public class StudentExamServiceImpl implements StudentExamService {
     }
     
     @Override
-    public BigDecimal getExamScoreByTitle(Long studentId, String examTitle) {
+    public Map<Long, BigDecimal> getExamScoreByTitle(Long studentId, String examTitle) {
         if (studentId == null || !StringUtils.hasText(examTitle)) {
-            return BigDecimal.ZERO;
+            return new HashMap<>();
         }
         
+        // 先查询匹配title的考试ID
+        List<Long> examIds = examMapper.selectList(Wrappers.<ExamPo>query()
+                .select("exam_id")
+                .like("title", "%" + examTitle + "%"))
+                .stream()
+                .map(ExamPo::getExamId)
+                .collect(Collectors.toList());
+        
+        if (examIds.isEmpty()) {
+            return new HashMap<>();
+        }
+        
+        // 根据考试ID分组查询总分
         QueryWrapper<StudentExamAnswerPO> queryWrapper = Wrappers.<StudentExamAnswerPO>query()
-                .select("IFNULL(SUM(score), 0) as total_score")
+                .select("exam_id", "IFNULL(SUM(score), 0) as total_score")
                 .eq("student_id", studentId)
-                .like("exam_title", "%" + examTitle + "%");
+                .in("exam_id", examIds)
+                .groupBy("exam_id");
                 
-        Map<String, Object> result = studentExamMapper.selectMaps(queryWrapper).get(0);
-        return parseTotalScore(result);
+        List<Map<String, Object>> results = studentExamMapper.selectMaps(queryWrapper);
+        
+        // 转换为Map<Long, BigDecimal>格式
+        Map<Long, BigDecimal> scoreMap = new HashMap<>();
+        for (Map<String, Object> result : results) {
+            Long examId = Long.valueOf(result.get("exam_id").toString());
+            BigDecimal totalScore = parseTotalScore(result);
+            scoreMap.put(examId, totalScore);
+        }
+        
+        return scoreMap;
     }
     
     @Override
@@ -239,17 +285,18 @@ public class StudentExamServiceImpl implements StudentExamService {
         }
         
         // 查询考试ID
-        QueryWrapper<StudentExamAnswerPO> idQueryWrapper = Wrappers.<StudentExamAnswerPO>query()
-                .select("DISTINCT exam_id")
-                .eq("student_id", studentId)
-                .like("exam_title", "%" + examTitle + "%");
-                
-        List<Object> examIds = studentExamMapper.selectObjs(idQueryWrapper);
+        List<Long> examIds = examMapper.selectList(Wrappers.<ExamPo>query()
+                .select("exam_id")
+                .like("title", "%" + examTitle + "%"))
+                .stream()
+                .map(ExamPo::getExamId)
+                .collect(Collectors.toList());
+        
         if (examIds.isEmpty()) {
             return new HashMap<>();
         }
         
-        Long examId = Long.valueOf(examIds.get(0).toString());
+        Long examId = examIds.get(0);
         return getExamDetail(studentId, examId);
     }
     
@@ -283,17 +330,18 @@ public class StudentExamServiceImpl implements StudentExamService {
         }
         
         // 查询考试ID
-        QueryWrapper<StudentExamAnswerPO> idQueryWrapper = Wrappers.<StudentExamAnswerPO>query()
-                .select("DISTINCT exam_id")
-                .eq("student_id", studentId)
-                .like("exam_title", "%" + examTitle + "%");
-                
-        List<Object> examIds = studentExamMapper.selectObjs(idQueryWrapper);
+        List<Long> examIds = examMapper.selectList(Wrappers.<ExamPo>query()
+                .select("exam_id")
+                .like("title", "%" + examTitle + "%"))
+                .stream()
+                .map(ExamPo::getExamId)
+                .collect(Collectors.toList());
+        
         if (examIds.isEmpty()) {
             return new HashMap<>();
         }
         
-        Long examId = Long.valueOf(examIds.get(0).toString());
+        Long examId = examIds.get(0);
         return analyzeExamResult(studentId, examId);
     }
     
@@ -325,10 +373,22 @@ public class StudentExamServiceImpl implements StudentExamService {
             return new ArrayList<>();
         }
         
+        // 查询考试ID
+        List<Long> examIds = examMapper.selectList(Wrappers.<ExamPo>query()
+                .select("exam_id")
+                .like("title", "%" + examTitle + "%"))
+                .stream()
+                .map(ExamPo::getExamId)
+                .collect(Collectors.toList());
+        
+        if (examIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
         // 查找相关答案
         QueryWrapper<StudentExamAnswerPO> queryWrapper = Wrappers.<StudentExamAnswerPO>query()
                 .eq("student_id", studentId)
-                .like("exam_title", "%" + examTitle + "%")
+                .in("exam_id", examIds)
                 .like("question_content", "%" + questionContent + "%");
                 
         List<StudentExamAnswerPO> answerList = studentExamMapper.selectList(queryWrapper);
@@ -371,8 +431,21 @@ public class StudentExamServiceImpl implements StudentExamService {
             return new ArrayList<>();
         }
         
+        // 查询考试ID
+        List<Long> examIds = examMapper.selectList(Wrappers.<ExamPo>query()
+                .select("exam_id")
+                .like("title", "%" + examTitle + "%"))
+                .stream()
+                .map(ExamPo::getExamId)
+                .collect(Collectors.toList());
+        
+        if (examIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        Long examId = examIds.get(0);
         // 分析考试结果
-        Map<String, Object> analysis = analyzeExamResultByTitle(studentId, examTitle);
+        Map<String, Object> analysis = analyzeExamResult(studentId, examId);
         
         List<String> adviceList = new ArrayList<>();
         adviceList.add("根据" + examTitle + "考试结果，建议加强某某知识点的学习");
@@ -389,12 +462,9 @@ public class StudentExamServiceImpl implements StudentExamService {
         }
         
         // 查询匹配的考试
-        QueryWrapper<StudentExamAnswerPO> examQueryWrapper = Wrappers.<StudentExamAnswerPO>query()
-                .select("DISTINCT exam_id, exam_title")
-                .eq("student_id", studentId)
-                .like("exam_title", "%" + keywords + "%");
-                
-        List<Map<String, Object>> exams = studentExamMapper.selectMaps(examQueryWrapper);
+        List<Map<String, Object>> exams = examMapper.selectMaps(Wrappers.<ExamPo>query()
+                .select("exam_id", "title as exam_title")
+                .like("title", "%" + keywords + "%"));
         
         // 查询匹配的问题
         QueryWrapper<StudentExamAnswerPO> questionQueryWrapper = Wrappers.<StudentExamAnswerPO>query()
@@ -410,6 +480,18 @@ public class StudentExamServiceImpl implements StudentExamService {
         result.put("questions", questions);
         
         return result;
+    }
+
+    // TODO 简答和填空判题
+    private double judgeQuestionIfCorrect(Long questionId, String studentAnswer) {
+        QuestionPo questionPo = questionMapper.selectById(questionId);
+        if(Objects.equals(questionPo.getQuestionType(), QuestionType.CHOICE.getCode())
+            || Objects.equals(questionPo.getQuestionType(), QuestionType.JUDGMENT.getCode())){
+            return 1;
+        }
+        else {
+            return 0.5;
+        }
     }
     
     /**

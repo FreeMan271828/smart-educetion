@@ -1,13 +1,10 @@
 package org.nuist.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.nuist.bo.ExamBO;
-import org.nuist.dto.AddExamDTO;
-import org.nuist.dto.UpdateExamDTO;
 import org.nuist.mapper.ExamMapper;
-import org.nuist.po.Exam;
+import org.nuist.po.ExamPo;
 import org.nuist.service.ExamService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,7 +16,7 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class ExamServiceImpl extends ServiceImpl<ExamMapper, Exam> implements ExamService {
+public class ExamServiceImpl implements ExamService {
 
     private final ExamMapper examMapper;
 
@@ -28,11 +25,11 @@ public class ExamServiceImpl extends ServiceImpl<ExamMapper, Exam> implements Ex
         if (id == null) {
             return null;
         }
-        Exam exam = examMapper.selectById(id);
-        if (exam == null) {
+        ExamPo examPo = examMapper.selectById(id);
+        if (examPo == null) {
             return null;
         }
-        return ExamBO.fromExam(exam);
+        return ExamBO.fromExam(examPo);
     }
 
     @Override
@@ -40,9 +37,9 @@ public class ExamServiceImpl extends ServiceImpl<ExamMapper, Exam> implements Ex
         if (courseId == null) {
             return new ArrayList<>();
         }
-        return convertToExamBO(
-                list(Wrappers.<Exam>lambdaQuery()
-                        .eq(Exam::getCourseId, courseId)));
+        List<ExamPo> examPos = examMapper.selectList(Wrappers.<ExamPo>lambdaQuery()
+                .eq(ExamPo::getCourseId, courseId));
+        return convertToExamBO(examPos);
     }
 
     @Override
@@ -50,9 +47,9 @@ public class ExamServiceImpl extends ServiceImpl<ExamMapper, Exam> implements Ex
         if (teacherId == null) {
             return new ArrayList<>();
         }
-        return convertToExamBO(
-                list(Wrappers.<Exam>lambdaQuery()
-                        .eq(Exam::getTeacherId, teacherId)));
+        List<ExamPo> examPos = examMapper.selectList(Wrappers.<ExamPo>lambdaQuery()
+                .eq(ExamPo::getTeacherId, teacherId));
+        return convertToExamBO(examPos);
     }
 
     @Override
@@ -60,56 +57,55 @@ public class ExamServiceImpl extends ServiceImpl<ExamMapper, Exam> implements Ex
         if (courseId == null || teacherId == null) {
             return new ArrayList<>();
         }
-        return convertToExamBO(
-                list(Wrappers.<Exam>lambdaQuery()
-                        .eq(Exam::getCourseId, courseId)
-                        .eq(Exam::getTeacherId, teacherId))
-        );
+        List<ExamPo> examPos = examMapper.selectList(Wrappers.<ExamPo>lambdaQuery()
+                .eq(ExamPo::getCourseId, courseId)
+                .eq(ExamPo::getTeacherId, teacherId));
+        return convertToExamBO(examPos);
     }
 
     @Override
-    public ExamBO saveExam(AddExamDTO addExamDTO) {
-        Exam persistedExam = new Exam();
-        persistedExam.setTitle(addExamDTO.getTitle());
-        persistedExam.setDescription(addExamDTO.getDescription());
-        persistedExam.setCourseId(addExamDTO.getCourseId());
-        persistedExam.setTeacherId(addExamDTO.getTeacherId());
-        persistedExam.setTotalScore(addExamDTO.getTotalScore());
-        persistedExam.setDurationMinutes(addExamDTO.getDurationMinutes());
-        persistedExam.setStartTime(addExamDTO.getStartTime());
-        persistedExam.setEndTime(addExamDTO.getEndTime());
-        persistedExam.setStatus(addExamDTO.getStatus());
+    public ExamBO saveExam(ExamBO examBo) {
+        ExamPo persistedExamPo = new ExamPo();
+        persistedExamPo.setTitle(examBo.getTitle());
+        persistedExamPo.setDescription(examBo.getDescription());
+        persistedExamPo.setCourseId(examBo.getCourseId());
+        persistedExamPo.setTeacherId(examBo.getTeacherId());
+        persistedExamPo.setTotalScore(examBo.getTotalScore());
+        persistedExamPo.setDurationMinutes(examBo.getDurationMinutes());
+        persistedExamPo.setStartTime(examBo.getStartTime());
+        persistedExamPo.setEndTime(examBo.getEndTime());
+        persistedExamPo.setStatus(examBo.getStatus());
 
-        examMapper.insert(persistedExam);
-        return ExamBO.fromExam(persistedExam);
+        examMapper.insert(persistedExamPo);
+        return ExamBO.fromExam(persistedExamPo);
     }
 
     @Override
-    public ExamBO updateExam(UpdateExamDTO updateExamDTO) {
+    public ExamBO updateExam(ExamBO examBo) {
         // DTO中，id为目标考试标识，剩余字段为新值，若为null则不更新
-        Exam exam = examMapper.selectById(updateExamDTO.getExamId());
-        if (exam == null) {
-            throw new IllegalArgumentException("Exam ID " + updateExamDTO.getExamId() + " not found");
+        ExamPo examPo = examMapper.selectById(examBo.getExamId());
+        if (examPo == null) {
+            throw new IllegalArgumentException("ExamPo ID " + examBo.getExamId() + " not found");
         }
 
-        if (updateExamDTO.getTotalScore() != null) {
-            exam.setTotalScore(updateExamDTO.getTotalScore());
+        if (examBo.getTotalScore() != null) {
+            examPo.setTotalScore(examBo.getTotalScore());
         }
-        if (updateExamDTO.getDurationMinutes() != null) {
-            exam.setDurationMinutes(updateExamDTO.getDurationMinutes());
+        if (examBo.getDurationMinutes() != null) {
+            examPo.setDurationMinutes(examBo.getDurationMinutes());
         }
-        if (updateExamDTO.getStartTime() != null) {
-            exam.setStartTime(updateExamDTO.getStartTime());
+        if (examBo.getStartTime() != null) {
+            examPo.setStartTime(examBo.getStartTime());
         }
-        if (updateExamDTO.getEndTime() != null) {
-            exam.setEndTime(updateExamDTO.getEndTime());
+        if (examBo.getEndTime() != null) {
+            examPo.setEndTime(examBo.getEndTime());
         }
-        if (updateExamDTO.getStatus() != null) {
-            exam.setStatus(updateExamDTO.getStatus());
+        if (examBo.getStatus() != null) {
+            examPo.setStatus(examBo.getStatus());
         }
 
-        examMapper.updateById(exam);
-        return ExamBO.fromExam(exam);
+        examMapper.updateById(examPo);
+        return ExamBO.fromExam(examPo);
     }
 
     @Override
@@ -117,7 +113,7 @@ public class ExamServiceImpl extends ServiceImpl<ExamMapper, Exam> implements Ex
         return examMapper.deleteById(id) > 0;
     }
 
-    private List<ExamBO> convertToExamBO(List<Exam> exams) {
-        return exams.stream().map(ExamBO::fromExam).collect(Collectors.toList());
+    private List<ExamBO> convertToExamBO(List<ExamPo> examPos) {
+        return examPos.stream().map(ExamBO::fromExam).collect(Collectors.toList());
     }
 }

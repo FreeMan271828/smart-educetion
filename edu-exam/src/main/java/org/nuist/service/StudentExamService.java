@@ -65,14 +65,15 @@ public interface StudentExamService {
      * @return 总得分
      */
     BigDecimal getExamScore(Long studentId, Long examId);
+
     
     /**
-     * 根据考试标题获取考试得分
+     * 根据考试标题获取每个考试的得分映射
      * @param studentId 学生ID
-     * @param examTitle 考试标题
-     * @return 总得分
+     * @param examTitle 考试标题关键词
+     * @return 考试ID到总分的映射
      */
-    BigDecimal getExamScoreByTitle(Long studentId, String examTitle);
+    Map<Long, BigDecimal> getExamScoreByTitle(Long studentId, String examTitle);
     
     /**
      * 获取学生所有考试的得分情况

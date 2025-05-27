@@ -22,7 +22,7 @@ public class StudentExamAnswerBO {
     private Long questionId;
     private Long studentId;
     private String studentAnswer;
-    private BigDecimal score;
+    private Double score;
     private String feedback;
     private Long gradedBy;
     private LocalDateTime gradedAt;
@@ -91,7 +91,7 @@ public class StudentExamAnswerBO {
      * @param feedback 反馈
      * @param gradedBy 评分教师ID
      */
-    public void grade(BigDecimal score, String feedback, Long gradedBy) {
+    public void grade(Double score, String feedback, Long gradedBy) {
         this.score = score;
         this.feedback = feedback;
         this.gradedBy = gradedBy;

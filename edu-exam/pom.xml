@@ -7,10 +7,10 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>edu-exam</artifactId>
+    <artifactId>edu-examPo</artifactId>
     <packaging>jar</packaging>
 
-    <name>edu-exam</name>
+    <name>edu-examPo</name>
     <url>http://maven.apache.org</url>
 
     <properties>
@@ -67,7 +67,7 @@
         </dependency>
         <dependency>
             <groupId>org.nuist</groupId>
-            <artifactId>edu-exam-api</artifactId>
+            <artifactId>edu-examPo-api</artifactId>
             <version>0.0.1-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>

@@ -4,8 +4,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.nuist.bo.ExamBO;
-import org.nuist.dto.AddExamDTO;
-import org.nuist.dto.UpdateExamDTO;
 import org.nuist.service.ExamService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -51,14 +49,14 @@ public class ExamController implements org.nuist.client.ExamClient {
 
     @PostMapping("/save")
     @Override
-    public ResponseEntity<ExamBO> saveExam(@RequestBody AddExamDTO addExamDTO) {
-        return ResponseEntity.ok(examService.saveExam(addExamDTO));
+    public ResponseEntity<ExamBO> saveExam(@RequestBody ExamBO examBo) {
+        return ResponseEntity.ok(examService.saveExam(examBo));
     }
 
     @PutMapping("/update")
     @Override
-    public ResponseEntity<ExamBO> updateExam(@RequestBody UpdateExamDTO updateExamDTO) {
-        return ResponseEntity.ok(examService.updateExam(updateExamDTO));
+    public ResponseEntity<ExamBO> updateExam(@RequestBody ExamBO examBo) {
+        return ResponseEntity.ok(examService.updateExam(examBo));
     }
 
     @DeleteMapping("/{id}")
