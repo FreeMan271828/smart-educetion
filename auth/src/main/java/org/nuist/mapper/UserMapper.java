@@ -1,7 +1,7 @@
 package org.nuist.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import org.nuist.model.User;
+import org.nuist.po.User;
 import java.util.List;
 import java.util.Map;
 

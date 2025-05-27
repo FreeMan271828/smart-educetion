@@ -9,7 +9,7 @@ import org.nuist.dto.UpdateTeacherDTO;
 import org.nuist.entity.TokenResponse;
 import org.nuist.enums.RoleEnum;
 import org.nuist.mapper.TeacherMapper;
-import org.nuist.model.TeacherPO;
+import org.nuist.po.TeacherPO;
 import org.nuist.service.TeacherService;
 import org.nuist.service.UserService;
 import org.springframework.stereotype.Service;

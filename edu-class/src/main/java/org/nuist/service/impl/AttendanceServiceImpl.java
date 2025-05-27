@@ -2,6 +2,7 @@ package org.nuist.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.nuist.bo.AttendanceBO;
 import org.nuist.mapper.AttendanceMapper;
 import org.nuist.mapper.CourseMapper;
@@ -24,7 +25,7 @@ import java.util.stream.Collectors;
  * 考勤服务实现类
  */
 @Service
-public class AttendanceServiceImpl implements AttendanceService {
+public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, AttendancePO> implements AttendanceService{
 
     @Autowired
     private AttendanceMapper attendanceMapper;

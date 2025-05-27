@@ -1,7 +1,7 @@
 package org.nuist.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import org.nuist.po.Role;
+import org.nuist.po.Exam;
 
-public interface RoleMapper extends BaseMapper<Role> {
+public interface ExamMapper extends BaseMapper<Exam> {
 }

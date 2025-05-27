@@ -1,16 +1,14 @@
 package org.nuist.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.nuist.entity.TokenResponse;
 import org.nuist.enums.RoleEnum;
 import org.nuist.mapper.RoleMapper;
 import org.nuist.mapper.UserMapper;
 import org.nuist.mapper.UserRoleMapper;
-import org.nuist.model.Role;
-import org.nuist.model.User;
-import org.nuist.model.UserRole;
+import org.nuist.po.Role;
+import org.nuist.po.User;
+import org.nuist.po.UserRole;
 import org.nuist.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.nuist.util.JwtUtil;

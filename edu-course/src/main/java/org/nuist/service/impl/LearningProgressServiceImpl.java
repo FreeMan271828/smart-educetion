@@ -76,7 +76,7 @@ public class LearningProgressServiceImpl implements LearningProgressService {
                 .eq(LearningProgressPO::getStudentId, studentId)
                 .eq(LearningProgressPO::getKnowledgeId, knowledgeId);
         
-        LearningProgressPO po = learningProgressMapper.selectById(queryWrapper);
+        LearningProgressPO po = learningProgressMapper.selectOne(queryWrapper);
         return po != null ? LearningProgressBO.fromPO(po) : null;
     }
     
