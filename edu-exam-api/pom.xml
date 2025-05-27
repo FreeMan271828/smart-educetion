@@ -7,10 +7,10 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>edu-examPo-api</artifactId>
+    <artifactId>edu-exam-api</artifactId>
     <packaging>jar</packaging>
 
-    <name>edu-examPo-api</name>
+    <name>edu-exam-api</name>
     <url>http://maven.apache.org</url>
 
     <properties>

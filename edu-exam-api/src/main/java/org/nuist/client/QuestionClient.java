@@ -5,6 +5,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -24,6 +25,15 @@ public interface QuestionClient {
 
     @GetMapping("/api/question/knowledge/{knowledgeId}")
     ResponseEntity<List<QuestionBO>> getQuestionsByKnowledge(@PathVariable Long knowledgeId);
+
+    @GetMapping("/api/question/knowledge/{knowledgeId}/conditions")
+    ResponseEntity<List<QuestionBO>> searchQuestionsInKnowledgeConditionally(
+            @PathVariable Long knowledgeId,
+            @RequestParam(required = false) String questionType,
+            @RequestParam(required = false) String difficulty,
+            @RequestParam(required = false) LocalDate startTime,
+            @RequestParam(required = false) LocalDate endTime
+    );
 
     @PostMapping("/api/question/save")
     ResponseEntity<QuestionBO> saveQuestion(@RequestBody QuestionBO questionBO);

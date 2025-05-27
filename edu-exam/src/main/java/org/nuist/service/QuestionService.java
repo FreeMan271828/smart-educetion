@@ -2,6 +2,7 @@ package org.nuist.service;
 
 import org.nuist.bo.QuestionBO;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface QuestionService {
@@ -39,6 +40,24 @@ public interface QuestionService {
      * @return 问题列表
      */
     List<QuestionBO> getQuestionsByKnowledgeId(Long knowledgeId);
+
+    /**
+     * 对于一个知识点中的问题，进行复杂条件查询
+     *
+     * @param knowledgeId 所属知识点ID
+     * @param questionType 问题类型（可选）
+     * @param difficulty 问题难度（可选）
+     * @param startTime 问题开始时间（可选）
+     * @param endTime 问题结束时间（可选）
+     * @return 问题列表
+     */
+    List<QuestionBO> getQuestionsByConditionInKnowledge(
+            Long knowledgeId,
+            String questionType,
+            String difficulty,
+            LocalDate startTime,
+            LocalDate endTime
+    );
 
     /**
      * 保存一个问题

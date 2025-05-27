@@ -1,5 +1,6 @@
 package org.nuist.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
@@ -9,8 +10,11 @@ import org.nuist.po.QuestionPo;
 import org.nuist.service.QuestionService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -72,6 +76,40 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, QuestionPo>
         return convertToQuestionBO(
                 list(Wrappers.<QuestionPo>lambdaQuery()
                         .eq(QuestionPo::getKnowledgeId, knowledgeId)));
+    }
+
+    @Override
+    public List<QuestionBO> getQuestionsByConditionInKnowledge(
+            Long knowledgeId,
+            String questionType,
+            String difficulty,
+            LocalDate startTime,
+            LocalDate endTime
+    ) {
+        if (knowledgeId == null) {
+            return new ArrayList<>();
+        }
+        // 仅包含一个知识点中的问题
+        LambdaQueryWrapper<QuestionPo> wrapper = Wrappers.<QuestionPo>lambdaQuery().eq(QuestionPo::getKnowledgeId, knowledgeId);
+
+        // 筛选问题类型
+        if (StringUtils.hasText(questionType)) {
+            wrapper.eq(QuestionPo::getQuestionType, questionType);
+        }
+        // 筛选问题难度
+        if (StringUtils.hasText(difficulty)) {
+            wrapper.eq(QuestionPo::getDifficulty, difficulty);
+        }
+        // 限定创建时间起始
+        if (startTime != null) {
+            wrapper.ge(QuestionPo::getCreatedAt, startTime.atStartOfDay());
+        }
+        // 限定创建时间结束
+        if (endTime != null) {
+            wrapper.le(QuestionPo::getCreatedAt, endTime.atTime(LocalTime.MAX));
+        }
+
+        return convertToQuestionBO(list(wrapper));
     }
 
     @Override

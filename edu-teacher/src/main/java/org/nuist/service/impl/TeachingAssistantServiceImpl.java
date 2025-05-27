@@ -32,7 +32,7 @@ public class TeachingAssistantServiceImpl implements TeachingAssistantService {
         KnowledgeBO knowledge = knowledgeService.getKnowledgeById(knowledgeId);
 
         // 实际应用时，需要利用Knowledge中的信息，让大模型生成具体考核内容，此处使用模拟数据
-        AddQuestionDTO question = new AddQuestionDTO();
+        QuestionBO question = new QuestionBO();
         question.setKnowledgeId(knowledgeId);
         question.setQuestionType(questionType);
         question.setDifficulty(difficulty);
@@ -46,7 +46,7 @@ public class TeachingAssistantServiceImpl implements TeachingAssistantService {
         if (questionId == null || studentId == null || !StringUtils.hasText(answer)) {
             throw new IllegalArgumentException("Parameters can't be null");
         }
-        QuestionBO question = questionService.getQuestionByID(questionId);
+        QuestionBO question = questionService.getQuestionById(questionId);
 
         // 实际应用时，调用大模型进行内容评测，产生结果
         Map<String, Object> result = new HashMap<>();

@@ -9,6 +9,7 @@ import org.nuist.service.QuestionService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,6 +51,20 @@ public class QuestionController implements QuestionClient {
     @Override
     public ResponseEntity<List<QuestionBO>> getQuestionsByKnowledge(@PathVariable Long knowledgeId) {
         return ResponseEntity.ok(questionService.getQuestionsByKnowledgeId(knowledgeId));
+    }
+
+    @GetMapping("/knowledge/{knowledgeId}/conditions")
+    @Override
+    public ResponseEntity<List<QuestionBO>> searchQuestionsInKnowledgeConditionally(
+            @PathVariable Long knowledgeId,
+            @RequestParam(required = false) String questionType,
+            @RequestParam(required = false) String difficulty,
+            @RequestParam(required = false) LocalDate startTime,
+            @RequestParam(required = false) LocalDate endTime
+    ) {
+        return ResponseEntity.ok(questionService.getQuestionsByConditionInKnowledge(
+                knowledgeId, questionType, difficulty, startTime, endTime)
+        );
     }
 
     @PostMapping("/save")
