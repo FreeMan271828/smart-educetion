@@ -26,6 +26,7 @@
 		<module>edu-teacher-api</module>
 		<module>edu-exam</module>
 		<module>edu-exam-api</module>
+		<module>deploy</module>
 	</modules>
 	<packaging>pom</packaging>
 	<properties>
