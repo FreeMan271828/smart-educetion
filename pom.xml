@@ -15,9 +15,17 @@
 	<description>Demo project for Spring Boot</description>
 	<modules>
 		<module>auth</module>
-		<module>student</module>
+		<module>edu-student</module>
 		<module>common</module>
-		<module>teacher</module>
+		<module>edu-teacher</module>
+		<module>edu-student-api</module>
+		<module>edu-course</module>
+		<module>edu-course-api</module>
+        <module>edu-class</module>
+		<module>edu-class-api</module>
+		<module>edu-teacher-api</module>
+		<module>edu-exam</module>
+		<module>edu-exam-api</module>
 	</modules>
 	<packaging>pom</packaging>
 	<properties>
@@ -27,14 +35,9 @@
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-starter-web</artifactId>
-				<version>3.4.5</version>
-			</dependency>
-			<dependency>
-				<groupId>org.mybatis.spring.boot</groupId>
-				<artifactId>mybatis-spring-boot-starter</artifactId>
-				<version>3.0.4</version>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-starter-openfeign</artifactId>
+				<version>4.2.1</version>
 			</dependency>
 			<dependency>
 				<groupId>com.baomidou</groupId>
