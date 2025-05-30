@@ -2,6 +2,7 @@ package org.nuist.client;
 
 import org.nuist.bo.KnowledgeBO;
 import org.nuist.dto.AddKnowledgeDTO;
+import org.nuist.dto.ResortKnowledgeDTO;
 import org.nuist.dto.UpdateKnowledgeDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
@@ -36,6 +37,9 @@ public interface KnowledgeClient {
     @PutMapping("/api/knowledge/update")
     ResponseEntity<KnowledgeBO> updateKnowledge(@RequestBody UpdateKnowledgeDTO updateKnowledgeDTO);
 
-    @DeleteMapping("/api/knowledge/{id}")
-    ResponseEntity<Map<String, Object>> deleteKnowledge(@PathVariable Long id);
+    @PutMapping("/api/knowledge/resort-knowledge")
+    ResponseEntity<Map<String, Object>> resortKnowledgeInCourse(@RequestBody ResortKnowledgeDTO resortKnowledgeDTO);
+
+    @DeleteMapping("/api/knowledge/course/{courseId}/knowledge/{id}")
+    ResponseEntity<Map<String, Object>> deleteKnowledgeInCourse(@PathVariable Long courseId, @PathVariable Long id);
 }

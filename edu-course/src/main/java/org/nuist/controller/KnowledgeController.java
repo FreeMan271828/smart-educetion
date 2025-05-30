@@ -1,11 +1,14 @@
 package org.nuist.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 import org.nuist.bo.KnowledgeBO;
 import org.nuist.client.KnowledgeClient;
+import org.nuist.dto.ResortKnowledgeDTO;
 import org.nuist.service.KnowledgeService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -32,40 +35,62 @@ public class KnowledgeController implements KnowledgeClient {
 
     private final KnowledgeService knowledgeService;
 
+    @Override
     @GetMapping("/{id}")
     public ResponseEntity<KnowledgeBO> getKnowledgeById(@PathVariable Long id) {
         return ResponseEntity.ok(knowledgeService.getKnowledgeById(id));
     }
 
+    @Override
     @GetMapping("/course/{courseId}")
     public ResponseEntity<List<KnowledgeBO>> getKnowledgeByCourseId(@PathVariable Long courseId) {
         return ResponseEntity.ok(knowledgeService.getKnowledgeByCourseId(courseId));
     }
 
+    @Override
     @GetMapping("/teacher/{teacherId}")
     public ResponseEntity<List<KnowledgeBO>> getKnowledgeByTeacherId(@PathVariable Long teacherId) {
         return ResponseEntity.ok(knowledgeService.getKnowledgeByTeacherId(teacherId));
     }
 
+    @Override
     @GetMapping("/course/{courseId}/teacher/{teacherId}")
     public ResponseEntity<List<KnowledgeBO>> getKnowledgeByTeacherInCourse(@PathVariable Long courseId,
             @PathVariable Long teacherId) {
         return ResponseEntity.ok(knowledgeService.getKnowledgeByTeacherInCourse(courseId, teacherId));
     }
 
+    @Override
     @PostMapping("/save")
     public ResponseEntity<KnowledgeBO> saveKnowledge(@RequestBody AddKnowledgeDTO addKnowledgeDTO) {
         return ResponseEntity.ok(knowledgeService.saveKnowledge(addKnowledgeDTO));
     }
 
+    @Override
     @PutMapping("/update")
     public ResponseEntity<KnowledgeBO> updateKnowledge(@RequestBody UpdateKnowledgeDTO updateKnowledgeDTO) {
         return ResponseEntity.ok(knowledgeService.updateKnowledge(updateKnowledgeDTO));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> deleteKnowledge(@PathVariable Long id) {
-        boolean result = knowledgeService.deleteKnowledge(id);
+    @Override
+    @Operation(summary = "调整课程中单个知识点的位置", description = "将指定课程中的指定知识点移动到指定位置（位置计数从1开始）")
+    @PutMapping("/resort-knowledge")
+    public ResponseEntity<Map<String, Object>> resortKnowledgeInCourse(@RequestBody ResortKnowledgeDTO resortKnowledgeDTO) {
+        boolean result = knowledgeService.resortKnowledge(
+                resortKnowledgeDTO.getKnowledgeId(),
+                resortKnowledgeDTO.getCourseId(),
+                resortKnowledgeDTO.getPosition()
+        );
+        return ResponseEntity.ok(new HashMap<>(){{
+            put("success", result);
+            put("message", result ? "重排序完成" : "重排序失败");
+        }});
+    }
+
+    @Override
+    @DeleteMapping("/course/{courseId}/knowledge/{id}")
+    public ResponseEntity<Map<String, Object>> deleteKnowledgeInCourse(@PathVariable Long courseId, @PathVariable Long id) {
+        boolean result = knowledgeService.deleteKnowledgeInCourse(id, courseId);
         Map<String, Object> resp = new HashMap<>();
         resp.put("success", result);
         resp.put("message", result ? "知识点删除成功" : "知识点删除失败");
