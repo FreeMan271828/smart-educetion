@@ -7,7 +7,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 import org.nuist.bo.KnowledgeBO;
-import org.nuist.client.KnowledgeClient;
 import org.nuist.dto.ResortKnowledgeDTO;
 import org.nuist.service.KnowledgeService;
 import org.springframework.http.ResponseEntity;
