@@ -15,17 +15,6 @@
 	<description>Demo project for Spring Boot</description>
 	<modules>
 		<module>auth</module>
-		<module>edu-student</module>
-		<module>common</module>
-		<module>edu-teacher</module>
-		<module>edu-student-api</module>
-		<module>edu-course</module>
-		<module>edu-course-api</module>
-        <module>edu-class</module>
-		<module>edu-class-api</module>
-		<module>edu-teacher-api</module>
-		<module>edu-exam</module>
-		<module>edu-exam-api</module>
 		<module>deploy</module>
 	</modules>
 	<packaging>pom</packaging>
