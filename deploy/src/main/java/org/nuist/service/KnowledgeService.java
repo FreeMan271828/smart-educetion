@@ -51,9 +51,20 @@ public interface KnowledgeService {
     KnowledgeBO updateKnowledge(UpdateKnowledgeDTO updateKnowledgeDTO);
 
     /**
+     * 重新排列一个课程中的知识点
+     * @param knowledgeId 待重排的知识点ID
+     * @param courseId 所属课程ID
+     * @param position 重排后的新位置（从1开始计数）
+     * @return 是否重排成功
+     */
+    boolean resortKnowledge(Long knowledgeId, Long courseId, Integer position);
+
+    /**
      * 删除一个知识点
-     * @param id 知识点的ID
+     *
+     * @param id       知识点的ID
+     * @param courseId 目标课程的ID
      * @return 是否删除成功
      */
-    boolean deleteKnowledge(Long id);
+    boolean deleteKnowledgeInCourse(Long id, Long courseId);
 }

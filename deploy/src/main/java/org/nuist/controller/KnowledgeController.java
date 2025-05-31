@@ -1,10 +1,14 @@
 package org.nuist.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 import org.nuist.bo.KnowledgeBO;
+import org.nuist.client.KnowledgeClient;
+import org.nuist.dto.ResortKnowledgeDTO;
 import org.nuist.service.KnowledgeService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -27,7 +31,7 @@ import java.util.Map;
 @Tag(name = "knowledge", description = "知识点相关API")
 @RequestMapping("/api/knowledge")
 @RequiredArgsConstructor
-public class KnowledgeController  {
+public class KnowledgeController {
 
     private final KnowledgeService knowledgeService;
 
@@ -62,9 +66,23 @@ public class KnowledgeController  {
         return ResponseEntity.ok(knowledgeService.updateKnowledge(updateKnowledgeDTO));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> deleteKnowledge(@PathVariable Long id) {
-        boolean result = knowledgeService.deleteKnowledge(id);
+    @Operation(summary = "调整课程中单个知识点的位置", description = "将指定课程中的指定知识点移动到指定位置（位置计数从1开始）")
+    @PutMapping("/resort-knowledge")
+    public ResponseEntity<Map<String, Object>> resortKnowledgeInCourse(@RequestBody ResortKnowledgeDTO resortKnowledgeDTO) {
+        boolean result = knowledgeService.resortKnowledge(
+                resortKnowledgeDTO.getKnowledgeId(),
+                resortKnowledgeDTO.getCourseId(),
+                resortKnowledgeDTO.getPosition()
+        );
+        return ResponseEntity.ok(new HashMap<>(){{
+            put("success", result);
+            put("message", result ? "重排序完成" : "重排序失败");
+        }});
+    }
+
+    @DeleteMapping("/course/{courseId}/knowledge/{id}")
+    public ResponseEntity<Map<String, Object>> deleteKnowledgeInCourse(@PathVariable Long courseId, @PathVariable Long id) {
+        boolean result = knowledgeService.deleteKnowledgeInCourse(id, courseId);
         Map<String, Object> resp = new HashMap<>();
         resp.put("success", result);
         resp.put("message", result ? "知识点删除成功" : "知识点删除失败");

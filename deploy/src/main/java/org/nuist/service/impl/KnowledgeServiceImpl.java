@@ -6,7 +6,9 @@ import lombok.RequiredArgsConstructor;
 import org.nuist.bo.KnowledgeBO;
 import org.nuist.dto.AddKnowledgeDTO;
 import org.nuist.dto.UpdateKnowledgeDTO;
+import org.nuist.mapper.CourseKnowledgeMapper;
 import org.nuist.mapper.KnowledgeMapper;
+import org.nuist.po.CourseKnowledge;
 import org.nuist.po.Knowledge;
 import org.nuist.service.KnowledgeService;
 import org.springframework.stereotype.Service;
@@ -16,6 +18,7 @@ import org.springframework.util.StringUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Service
 @Transactional
@@ -23,6 +26,7 @@ import java.util.stream.Collectors;
 public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge> implements KnowledgeService {
 
     private final KnowledgeMapper knowledgeMapper;
+    private final CourseKnowledgeMapper courseKnowledgeMapper;
 
     @Override
     public KnowledgeBO getKnowledgeById(Long id) {
@@ -41,9 +45,7 @@ public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge
         if (courseId == null) {
             return new ArrayList<>();
         }
-        return convertToKnowledgeBO(
-                list(
-                        Wrappers.<Knowledge>lambdaQuery().eq(Knowledge::getCourseId, courseId)));
+        return convertToKnowledgeBO(knowledgeMapper.selectKnowledgeInCourseOrdered(courseId));
     }
 
     @Override
@@ -65,7 +67,9 @@ public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge
                 list(
                         Wrappers.<Knowledge>lambdaQuery()
                                 .eq(Knowledge::getTeacherId, teacherId)
-                                .eq(Knowledge::getCourseId, courseId)));
+                                .apply("knowledge_id IN (SELECT knowledge_id FROM course_knowledge WHERE course_id = {0})", courseId)
+                )
+        );
     }
 
     @Override
@@ -79,6 +83,8 @@ public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge
         knowledge.setTeachPlan(addKnowledgeDTO.getTeachPlan());
 
         knowledgeMapper.insert(knowledge);
+        // 维护多对多关系
+        addKnowledgeToCourse(addKnowledgeDTO.getCourseId(), knowledge.getKnowledgeId());
         return KnowledgeBO.fromKnowledge(knowledge);
     }
 
@@ -108,12 +114,86 @@ public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge
     }
 
     @Override
-    public boolean deleteKnowledge(Long id) {
-        return knowledgeMapper.deleteById(id) > 0;
+    public boolean resortKnowledge(Long knowledgeId, Long courseId, Integer position) {
+        if (knowledgeId == null || courseId == null || position == null) {
+            throw new IllegalArgumentException("Parameter cannot be null");
+        }
+        List<CourseKnowledge> cks = courseKnowledgeMapper.selectList(
+                Wrappers.<CourseKnowledge>lambdaQuery()
+                        .eq(CourseKnowledge::getKnowledgeId, knowledgeId)
+                        .eq(CourseKnowledge::getCourseId, courseId)
+                        .orderByAsc(CourseKnowledge::getSequenceNumber)
+        );
+        if (position < 1 || position > cks.size()) {
+            throw new IllegalArgumentException("Position " + position + " not in range [1, " + cks.size() + "]");
+        }
+        // 找出要移动的项目的位置，并进行移动
+        IntStream.range(0, cks.size())
+                .filter(index -> cks.get(index).getKnowledgeId().equals(knowledgeId))
+                .findFirst()
+                .ifPresentOrElse(
+                        oldIndex -> {
+                            CourseKnowledge target = cks.remove(oldIndex);
+                            cks.add(position - 1, target);  // 注意position是从1开始
+                        },
+                        () -> {
+                            throw new IllegalArgumentException("Knowledge ID " + knowledgeId + " not found");
+                        }
+                );
+        // 重排完毕后，重新设置列表的sequenceNumber
+        normalizeSequenceNumber(cks);
+        cks.forEach(courseKnowledgeMapper::updateById);
+        return true;
+    }
+
+    @Override
+    public boolean deleteKnowledgeInCourse(Long id, Long courseId) {
+        int knowledgeDeleteCount = knowledgeMapper.deleteById(id);
+        int ckDeleteCount = courseKnowledgeMapper.delete(
+                Wrappers.<CourseKnowledge>lambdaQuery()
+                        .eq(CourseKnowledge::getKnowledgeId, id)
+        );
+        if (knowledgeDeleteCount <= 0 || ckDeleteCount <= 0) {
+            return false;
+        }
+        // 然后还要把剩余的知识点重排序
+        List<CourseKnowledge> cks = courseKnowledgeMapper.selectList(
+                Wrappers.<CourseKnowledge>lambdaQuery()
+                        .eq(CourseKnowledge::getCourseId, courseId)
+                        .orderByAsc(CourseKnowledge::getSequenceNumber)
+        );
+        normalizeSequenceNumber(cks);
+        cks.forEach(courseKnowledgeMapper::updateById);
+
+        return true;
     }
 
     private List<KnowledgeBO> convertToKnowledgeBO(List<Knowledge> knowledge) {
         return knowledge.stream().map(KnowledgeBO::fromKnowledge).collect(Collectors.toList());
+    }
+
+    private void addKnowledgeToCourse(Long courseId, Long knowledgeId) {
+        // 先获取当前课程中的Knowledge数量
+        int knowledgeCount = Math.toIntExact(courseKnowledgeMapper.selectCount(
+                Wrappers.<CourseKnowledge>lambdaQuery()
+                        .eq(CourseKnowledge::getCourseId, courseId)
+        ));
+        // 维护多对多关系
+        courseKnowledgeMapper.insert(
+                CourseKnowledge.builder()
+                        .courseId(courseId)
+                        .knowledgeId(knowledgeId)
+                        .sequenceNumber(knowledgeCount + 1)
+                        .build()
+        );
+    }
+
+    private void normalizeSequenceNumber(List<CourseKnowledge> cks) {
+        for (int index = 0; index < cks.size(); index++) {
+            CourseKnowledge ck = cks.get(index);
+            ck.setSequenceNumber(index + 1);
+            cks.set(index, ck);
+        }
     }
 
 }
