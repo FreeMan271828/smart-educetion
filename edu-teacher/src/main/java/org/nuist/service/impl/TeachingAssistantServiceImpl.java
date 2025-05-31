@@ -3,7 +3,6 @@ package org.nuist.service.impl;
 import lombok.RequiredArgsConstructor;
 import org.nuist.bo.KnowledgeBO;
 import org.nuist.bo.QuestionBO;
-import org.nuist.dto.AddQuestionDTO;
 import org.nuist.service.KnowledgeService;
 import org.nuist.service.QuestionService;
 import org.nuist.service.TeachingAssistantService;

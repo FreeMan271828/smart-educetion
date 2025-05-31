@@ -31,48 +31,41 @@ import java.util.Map;
 @Tag(name = "knowledge", description = "知识点相关API")
 @RequestMapping("/api/knowledge")
 @RequiredArgsConstructor
-public class KnowledgeController implements KnowledgeClient {
+public class KnowledgeController {
 
     private final KnowledgeService knowledgeService;
 
-    @Override
     @GetMapping("/{id}")
     public ResponseEntity<KnowledgeBO> getKnowledgeById(@PathVariable Long id) {
         return ResponseEntity.ok(knowledgeService.getKnowledgeById(id));
     }
 
-    @Override
     @GetMapping("/course/{courseId}")
     public ResponseEntity<List<KnowledgeBO>> getKnowledgeByCourseId(@PathVariable Long courseId) {
         return ResponseEntity.ok(knowledgeService.getKnowledgeByCourseId(courseId));
     }
 
-    @Override
     @GetMapping("/teacher/{teacherId}")
     public ResponseEntity<List<KnowledgeBO>> getKnowledgeByTeacherId(@PathVariable Long teacherId) {
         return ResponseEntity.ok(knowledgeService.getKnowledgeByTeacherId(teacherId));
     }
 
-    @Override
     @GetMapping("/course/{courseId}/teacher/{teacherId}")
     public ResponseEntity<List<KnowledgeBO>> getKnowledgeByTeacherInCourse(@PathVariable Long courseId,
             @PathVariable Long teacherId) {
         return ResponseEntity.ok(knowledgeService.getKnowledgeByTeacherInCourse(courseId, teacherId));
     }
 
-    @Override
     @PostMapping("/save")
     public ResponseEntity<KnowledgeBO> saveKnowledge(@RequestBody AddKnowledgeDTO addKnowledgeDTO) {
         return ResponseEntity.ok(knowledgeService.saveKnowledge(addKnowledgeDTO));
     }
 
-    @Override
     @PutMapping("/update")
     public ResponseEntity<KnowledgeBO> updateKnowledge(@RequestBody UpdateKnowledgeDTO updateKnowledgeDTO) {
         return ResponseEntity.ok(knowledgeService.updateKnowledge(updateKnowledgeDTO));
     }
 
-    @Override
     @Operation(summary = "调整课程中单个知识点的位置", description = "将指定课程中的指定知识点移动到指定位置（位置计数从1开始）")
     @PutMapping("/resort-knowledge")
     public ResponseEntity<Map<String, Object>> resortKnowledgeInCourse(@RequestBody ResortKnowledgeDTO resortKnowledgeDTO) {
@@ -87,7 +80,6 @@ public class KnowledgeController implements KnowledgeClient {
         }});
     }
 
-    @Override
     @DeleteMapping("/course/{courseId}/knowledge/{id}")
     public ResponseEntity<Map<String, Object>> deleteKnowledgeInCourse(@PathVariable Long courseId, @PathVariable Long id) {
         boolean result = knowledgeService.deleteKnowledgeInCourse(id, courseId);
