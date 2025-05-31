@@ -46,6 +46,13 @@
         </dependency>
 
         <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.30</version>
+            <!--				<optional>true</optional>-->
+        </dependency>
+
+        <dependency>
             <groupId>org.nuist</groupId>
             <artifactId>auth</artifactId>
             <version>0.0.1-SNAPSHOT</version>
