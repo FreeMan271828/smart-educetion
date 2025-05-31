@@ -120,7 +120,6 @@ public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge
         }
         List<CourseKnowledge> cks = courseKnowledgeMapper.selectList(
                 Wrappers.<CourseKnowledge>lambdaQuery()
-                        .eq(CourseKnowledge::getKnowledgeId, knowledgeId)
                         .eq(CourseKnowledge::getCourseId, courseId)
                         .orderByAsc(CourseKnowledge::getSequenceNumber)
         );
