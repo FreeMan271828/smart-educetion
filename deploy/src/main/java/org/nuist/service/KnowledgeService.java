@@ -51,6 +51,22 @@ public interface KnowledgeService {
     KnowledgeBO updateKnowledge(UpdateKnowledgeDTO updateKnowledgeDTO);
 
     /**
+     * 将一个已存在的知识点添加到一个课程中
+     * @param courseId 待添加知识点的课程
+     * @param knowledgeId 目标知识点
+     * @return 操作是否成功
+     */
+    boolean appendKnowledgeToCourse(Long courseId, Long knowledgeId);
+
+    /**
+     * 将一个已存在的知识点拷贝之后，加入到课程中
+     * @param courseId 目标课程
+     * @param knowledgeId 目标知识点
+     * @return 复制后新知识点
+     */
+    KnowledgeBO copyKnowledgeToCourse(Long courseId, Long knowledgeId);
+
+    /**
      * 重新排列一个课程中的知识点
      * @param knowledgeId 待重排的知识点ID
      * @param courseId 所属课程ID

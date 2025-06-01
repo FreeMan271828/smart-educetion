@@ -60,6 +60,22 @@ public class KnowledgeController {
         return ResponseEntity.ok(knowledgeService.saveKnowledge(addKnowledgeDTO));
     }
 
+    @Operation(summary = "添加已有知识点到课程", description = "该操作会直接复用已有的知识点，使得多个课程引用同一个知识点对象。该操作不会检验传入ID的正确性")
+    @PostMapping("/{knowledgeId}/append/course/{courseId}")
+    public ResponseEntity<Map<String, Object>> appendKnowledgeToCourse(@PathVariable Long knowledgeId, @PathVariable Long courseId) {
+        boolean success = knowledgeService.appendKnowledgeToCourse(courseId, knowledgeId);
+        return ResponseEntity.ok(new HashMap<>(){{
+            put("success", success);
+            put("message", success ? "知识点复用添加到课程成功" : "操作失败，请检查参数合法性");
+        }});
+    }
+
+    @Operation(summary = "复制并添加已有知识点到课程", description = "复制后的知识点为全新实体，仅与原知识点内容相同。该操作会检验传入knowledgeId的正确性")
+    @PostMapping("/{knowledgeId}/copy/course/{courseId}")
+    public ResponseEntity<KnowledgeBO> copyKnowledgeToCourse(@PathVariable Long knowledgeId, @PathVariable Long courseId) {
+        return ResponseEntity.ok(knowledgeService.copyKnowledgeToCourse(courseId, knowledgeId));
+    }
+
     @PutMapping("/update")
     public ResponseEntity<KnowledgeBO> updateKnowledge(@RequestBody UpdateKnowledgeDTO updateKnowledgeDTO) {
         return ResponseEntity.ok(knowledgeService.updateKnowledge(updateKnowledgeDTO));

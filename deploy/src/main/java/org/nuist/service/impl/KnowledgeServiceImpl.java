@@ -9,6 +9,7 @@ import org.nuist.dto.UpdateKnowledgeDTO;
 import org.nuist.mapper.CourseKnowledgeMapper;
 import org.nuist.mapper.KnowledgeMapper;
 import org.nuist.po.CourseKnowledge;
+import org.nuist.po.CoursePO;
 import org.nuist.po.Knowledge;
 import org.nuist.service.KnowledgeService;
 import org.springframework.stereotype.Service;
@@ -84,7 +85,7 @@ public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge
 
         knowledgeMapper.insert(knowledge);
         // 维护多对多关系
-        addKnowledgeToCourse(addKnowledgeDTO.getCourseId(), knowledge.getKnowledgeId());
+        appendKnowledgeToCourse(addKnowledgeDTO.getCourseId(), knowledge.getKnowledgeId());
         return KnowledgeBO.fromKnowledge(knowledge);
     }
 
@@ -100,6 +101,9 @@ public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge
         }
         if (StringUtils.hasText(updateKnowledgeDTO.getDescription())) {
             knowledge.setDescription(updateKnowledgeDTO.getDescription());
+        }
+        if (updateKnowledgeDTO.getTeacherId() != null) {
+            knowledge.setTeacherId(updateKnowledgeDTO.getTeacherId());
         }
         if (StringUtils.hasText(updateKnowledgeDTO.getDifficultyLevel())) {
             knowledge.setDifficultyLevel(updateKnowledgeDTO.getDifficultyLevel());
@@ -164,6 +168,15 @@ public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge
         normalizeSequenceNumber(cks);
         cks.forEach(courseKnowledgeMapper::updateById);
 
+        // 然后检查一下如果删完之后，没有任何课程引用该知识点了，那把该知识点也从数据库中移除
+        cks = courseKnowledgeMapper.selectList(
+                Wrappers.<CourseKnowledge>lambdaQuery()
+                        .eq(CourseKnowledge::getKnowledgeId, id)
+        );
+        if (cks.isEmpty()) {
+            knowledgeMapper.deleteById(id);
+        }
+
         return true;
     }
 
@@ -171,20 +184,42 @@ public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge
         return knowledge.stream().map(KnowledgeBO::fromKnowledge).collect(Collectors.toList());
     }
 
-    private void addKnowledgeToCourse(Long courseId, Long knowledgeId) {
+    @Override
+    public boolean appendKnowledgeToCourse(Long courseId, Long knowledgeId) {
         // 先获取当前课程中的Knowledge数量
         int knowledgeCount = Math.toIntExact(courseKnowledgeMapper.selectCount(
                 Wrappers.<CourseKnowledge>lambdaQuery()
                         .eq(CourseKnowledge::getCourseId, courseId)
         ));
         // 维护多对多关系
-        courseKnowledgeMapper.insert(
+        return courseKnowledgeMapper.insert(
                 CourseKnowledge.builder()
                         .courseId(courseId)
                         .knowledgeId(knowledgeId)
                         .sequenceNumber(knowledgeCount + 1)
                         .build()
-        );
+        ) > 0;
+    }
+
+    @Override
+    public KnowledgeBO copyKnowledgeToCourse(Long courseId, Long knowledgeId) {
+        if (courseId == null || knowledgeId == null) {
+            throw new IllegalArgumentException("Parameter cannot be null");
+        }
+        Knowledge knowledge = knowledgeMapper.selectById(knowledgeId);
+        if (knowledge == null) {
+            throw new IllegalArgumentException("Knowledge ID " + knowledgeId + " not found");
+        }
+        AddKnowledgeDTO copy = new AddKnowledgeDTO();
+        // 复制一个课程内容
+        copy.setCourseId(courseId);
+        copy.setName(knowledge.getName());
+        copy.setDescription(knowledge.getDescription());
+        copy.setDifficultyLevel(knowledge.getDifficultyLevel());
+        copy.setTeachPlan(knowledge.getTeachPlan());
+        copy.setTeacherId(knowledge.getTeacherId());
+
+        return saveKnowledge(copy);
     }
 
     private void normalizeSequenceNumber(List<CourseKnowledge> cks) {
