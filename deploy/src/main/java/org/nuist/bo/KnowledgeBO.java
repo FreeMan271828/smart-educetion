@@ -17,7 +17,6 @@ public class KnowledgeBO {
     private String description;
     private String difficultyLevel;
     private Long teacherId;
-    private Long courseId;
     private String teachPlan;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -29,7 +28,6 @@ public class KnowledgeBO {
                 .description(knowledge.getDescription())
                 .difficultyLevel(knowledge.getDifficultyLevel())
                 .teacherId(knowledge.getTeacherId())
-                .courseId(knowledge.getCourseId())
                 .teachPlan(knowledge.getTeachPlan())
                 .createdAt(knowledge.getCreatedAt())
                 .updatedAt(knowledge.getUpdatedAt())
@@ -43,7 +41,6 @@ public class KnowledgeBO {
         knowledge.setDescription(description);
         knowledge.setDifficultyLevel(difficultyLevel);
         knowledge.setTeacherId(teacherId);
-        knowledge.setCourseId(courseId);
         knowledge.setTeachPlan(teachPlan);
         knowledge.setCreatedAt(createdAt);
         knowledge.setUpdatedAt(updatedAt);

@@ -35,11 +35,6 @@ public class Knowledge {
     private Long teacherId;
 
     /**
-     * 所属的课程ID
-     */
-    private Long courseId;
-
-    /**
      * 教案内容
      */
     private String teachPlan;

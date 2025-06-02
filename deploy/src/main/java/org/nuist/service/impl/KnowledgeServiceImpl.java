@@ -73,18 +73,27 @@ public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge
     }
 
     @Override
+    public List<KnowledgeBO> searchKnowledge(String keyword) {
+        return convertToKnowledgeBO(
+                list(
+                        Wrappers.<Knowledge>lambdaQuery()
+                                .like(Knowledge::getName, keyword)
+                                .or().like(Knowledge::getDescription, keyword)
+                )
+        );
+    }
+
+    @Override
     public KnowledgeBO saveKnowledge(AddKnowledgeDTO addKnowledgeDTO) {
         Knowledge knowledge = new Knowledge();
         knowledge.setName(addKnowledgeDTO.getName());
         knowledge.setDescription(addKnowledgeDTO.getDescription());
         knowledge.setDifficultyLevel(addKnowledgeDTO.getDifficultyLevel());
-        knowledge.setCourseId(addKnowledgeDTO.getCourseId());
         knowledge.setTeacherId(addKnowledgeDTO.getTeacherId());
         knowledge.setTeachPlan(addKnowledgeDTO.getTeachPlan());
 
         knowledgeMapper.insert(knowledge);
-        // 维护多对多关系
-        addKnowledgeToCourse(addKnowledgeDTO.getCourseId(), knowledge.getKnowledgeId());
+
         return KnowledgeBO.fromKnowledge(knowledge);
     }
 
@@ -100,6 +109,9 @@ public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge
         }
         if (StringUtils.hasText(updateKnowledgeDTO.getDescription())) {
             knowledge.setDescription(updateKnowledgeDTO.getDescription());
+        }
+        if (updateKnowledgeDTO.getTeacherId() != null) {
+            knowledge.setTeacherId(updateKnowledgeDTO.getTeacherId());
         }
         if (StringUtils.hasText(updateKnowledgeDTO.getDifficultyLevel())) {
             knowledge.setDifficultyLevel(updateKnowledgeDTO.getDifficultyLevel());
@@ -147,23 +159,59 @@ public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge
 
     @Override
     public boolean deleteKnowledgeInCourse(Long id, Long courseId) {
-        int knowledgeDeleteCount = knowledgeMapper.deleteById(id);
+//        int knowledgeDeleteCount = knowledgeMapper.deleteById(id);
         int ckDeleteCount = courseKnowledgeMapper.delete(
                 Wrappers.<CourseKnowledge>lambdaQuery()
                         .eq(CourseKnowledge::getKnowledgeId, id)
         );
-        if (knowledgeDeleteCount <= 0 || ckDeleteCount <= 0) {
+        if (ckDeleteCount <= 0) {
             return false;
         }
-        // 然后还要把剩余的知识点重排序
-        List<CourseKnowledge> cks = courseKnowledgeMapper.selectList(
+        // 还要把剩余的知识点重排序
+        postDeleteKnowledgeInCourse(courseId);
+
+        return true;
+    }
+
+    @Override
+    public boolean batchDeleteKnowledgeInCourse(List<Long> knowledgeIds, Long courseId) {
+        int deleteCount = courseKnowledgeMapper.delete(
                 Wrappers.<CourseKnowledge>lambdaQuery()
                         .eq(CourseKnowledge::getCourseId, courseId)
-                        .orderByAsc(CourseKnowledge::getSequenceNumber)
+                        .in(CourseKnowledge::getKnowledgeId, knowledgeIds)
         );
-        normalizeSequenceNumber(cks);
-        cks.forEach(courseKnowledgeMapper::updateById);
+        if (deleteCount <= 0) {
+            return false;
+        }
+        postDeleteKnowledgeInCourse(courseId);
+        return true;
+    }
 
+    @Override
+    public boolean deleteKnowledge(Long knowledgeId) {
+        boolean result = removeById(knowledgeId);
+        if (!result) {
+            return false;
+        }
+        // 此时删除所有与该知识点相关的课程关联
+        courseKnowledgeMapper.delete(
+                Wrappers.<CourseKnowledge>lambdaQuery()
+                        .eq(CourseKnowledge::getKnowledgeId, knowledgeId)
+        );
+        return true;
+    }
+
+    @Override
+    public boolean batchDeleteKnowledge(List<Long> knowledgeIds) {
+        boolean result = removeBatchByIds(knowledgeIds);
+        if (!result) {
+            return false;
+        }
+        // 删除所有与这批知识点有关联的课程关联
+        courseKnowledgeMapper.delete(
+                Wrappers.<CourseKnowledge>lambdaQuery()
+                        .in(CourseKnowledge::getKnowledgeId, knowledgeIds)
+        );
         return true;
     }
 
@@ -171,20 +219,65 @@ public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge
         return knowledge.stream().map(KnowledgeBO::fromKnowledge).collect(Collectors.toList());
     }
 
-    private void addKnowledgeToCourse(Long courseId, Long knowledgeId) {
+    @Override
+    public boolean appendKnowledgeToCourse(Long courseId, Long knowledgeId) {
         // 先获取当前课程中的Knowledge数量
         int knowledgeCount = Math.toIntExact(courseKnowledgeMapper.selectCount(
                 Wrappers.<CourseKnowledge>lambdaQuery()
                         .eq(CourseKnowledge::getCourseId, courseId)
         ));
         // 维护多对多关系
-        courseKnowledgeMapper.insert(
+        return courseKnowledgeMapper.insert(
                 CourseKnowledge.builder()
                         .courseId(courseId)
                         .knowledgeId(knowledgeId)
                         .sequenceNumber(knowledgeCount + 1)
                         .build()
+        ) > 0;
+    }
+
+    @Override
+    public KnowledgeBO copyKnowledgeToCourse(Long courseId, Long knowledgeId) {
+        if (courseId == null || knowledgeId == null) {
+            throw new IllegalArgumentException("Parameter cannot be null");
+        }
+        Knowledge knowledge = knowledgeMapper.selectById(knowledgeId);
+        if (knowledge == null) {
+            throw new IllegalArgumentException("Knowledge ID " + knowledgeId + " not found");
+        }
+        Knowledge copy = new Knowledge();
+        // 复制一个课程内容
+        copy.setName(knowledge.getName());
+        copy.setDescription(knowledge.getDescription());
+        copy.setDifficultyLevel(knowledge.getDifficultyLevel());
+        copy.setTeachPlan(knowledge.getTeachPlan());
+        copy.setTeacherId(knowledge.getTeacherId());
+        knowledgeMapper.insert(copy);
+        // 再维护多对多关系
+        appendKnowledgeToCourse(courseId, copy.getKnowledgeId());
+        return KnowledgeBO.fromKnowledge(copy);
+    }
+
+    private void postDeleteKnowledgeInCourse(Long courseId) {
+        // 在课程中删除知识点的后操作：重新排序
+        List<CourseKnowledge> cks = courseKnowledgeMapper.selectList(
+                Wrappers.<CourseKnowledge>lambdaQuery()
+                        .eq(CourseKnowledge::getCourseId, courseId)
+                        .orderByAsc(CourseKnowledge::getSequenceNumber)
         );
+        normalizeSequenceNumber(cks);
+        cks.forEach(courseKnowledgeMapper::updateById);
+    }
+
+    private void checkAndRemoveIsolatedKnowledge(Long knowledgeId) {
+        // 检查一个知识点是否没有被任何课程引用。如果是，则移除该知识点
+        List<CourseKnowledge> cks = courseKnowledgeMapper.selectList(
+                Wrappers.<CourseKnowledge>lambdaQuery()
+                        .eq(CourseKnowledge::getKnowledgeId, knowledgeId)
+        );
+        if (cks.isEmpty()) {
+            knowledgeMapper.deleteById(knowledgeId);
+        }
     }
 
     private void normalizeSequenceNumber(List<CourseKnowledge> cks) {

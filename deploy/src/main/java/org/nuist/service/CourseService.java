@@ -44,6 +44,13 @@ public interface CourseService {
      * @return 课程列表
      */
     List<CourseBO> getCoursesByCategory(String category);
+
+    /**
+     * 查询与一个知识点关联的全部课程
+     * @param knowledgeId 目标知识点ID
+     * @return 相关联的课程列表
+     */
+    List<CourseBO> getCoursesByRelatedKnowledge(Long knowledgeId);
     
     /**
      * 获取所有课程
