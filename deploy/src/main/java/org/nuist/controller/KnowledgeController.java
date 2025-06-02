@@ -55,6 +55,7 @@ public class KnowledgeController {
         return ResponseEntity.ok(knowledgeService.getKnowledgeByTeacherInCourse(courseId, teacherId));
     }
 
+    @Operation(summary = "持久化一个知识点", description = "仅保存知识点信息，此操作不会将其与任何课程建立关联")
     @PostMapping("/save")
     public ResponseEntity<KnowledgeBO> saveKnowledge(@RequestBody AddKnowledgeDTO addKnowledgeDTO) {
         return ResponseEntity.ok(knowledgeService.saveKnowledge(addKnowledgeDTO));

@@ -9,7 +9,6 @@ public class AddKnowledgeDTO {
     private String description;
     private String difficultyLevel;
     private Long teacherId;
-    private Long courseId;
     private String teachPlan;
 
 }

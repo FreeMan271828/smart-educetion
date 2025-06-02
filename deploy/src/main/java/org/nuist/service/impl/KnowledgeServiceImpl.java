@@ -79,13 +79,11 @@ public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge
         knowledge.setName(addKnowledgeDTO.getName());
         knowledge.setDescription(addKnowledgeDTO.getDescription());
         knowledge.setDifficultyLevel(addKnowledgeDTO.getDifficultyLevel());
-        knowledge.setCourseId(addKnowledgeDTO.getCourseId());
         knowledge.setTeacherId(addKnowledgeDTO.getTeacherId());
         knowledge.setTeachPlan(addKnowledgeDTO.getTeachPlan());
 
         knowledgeMapper.insert(knowledge);
-        // 维护多对多关系
-        appendKnowledgeToCourse(addKnowledgeDTO.getCourseId(), knowledge.getKnowledgeId());
+
         return KnowledgeBO.fromKnowledge(knowledge);
     }
 
@@ -210,16 +208,17 @@ public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge
         if (knowledge == null) {
             throw new IllegalArgumentException("Knowledge ID " + knowledgeId + " not found");
         }
-        AddKnowledgeDTO copy = new AddKnowledgeDTO();
+        Knowledge copy = new Knowledge();
         // 复制一个课程内容
-        copy.setCourseId(courseId);
         copy.setName(knowledge.getName());
         copy.setDescription(knowledge.getDescription());
         copy.setDifficultyLevel(knowledge.getDifficultyLevel());
         copy.setTeachPlan(knowledge.getTeachPlan());
         copy.setTeacherId(knowledge.getTeacherId());
-
-        return saveKnowledge(copy);
+        knowledgeMapper.insert(copy);
+        // 再维护多对多关系
+        appendKnowledgeToCourse(courseId, copy.getKnowledgeId());
+        return KnowledgeBO.fromKnowledge(copy);
     }
 
     private void normalizeSequenceNumber(List<CourseKnowledge> cks) {
