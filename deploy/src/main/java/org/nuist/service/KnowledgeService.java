@@ -37,6 +37,13 @@ public interface KnowledgeService {
     List<KnowledgeBO> getKnowledgeByTeacherInCourse(Long courseId, Long teacherId);
 
     /**
+     * 根据关键词（标题or描述）搜索知识点
+     * @param keyword 关键词
+     * @return 搜索到的相关条目
+     */
+    List<KnowledgeBO> searchKnowledge(String keyword);
+
+    /**
      * 持久化保存知识点
      * @param addKnowledgeDTO dto
      * @return 知识点业务对象
@@ -76,11 +83,32 @@ public interface KnowledgeService {
     boolean resortKnowledge(Long knowledgeId, Long courseId, Integer position);
 
     /**
-     * 删除一个知识点
-     *
+     * 从课程删除一个知识点，不会移除知识点的持久化
      * @param id       知识点的ID
      * @param courseId 目标课程的ID
      * @return 是否删除成功
      */
     boolean deleteKnowledgeInCourse(Long id, Long courseId);
+
+    /**
+     * 从课程中批量删除一批知识点，不会移除知识点的持久化
+     * @param knowledgeIds 要删除的知识点ID列表
+     * @param courseId 目标课程的ID
+     * @return 删除是否成功
+     */
+    boolean batchDeleteKnowledgeInCourse(List<Long> knowledgeIds, Long courseId);
+
+    /**
+     * 删除知识点
+     * @param knowledgeId 要删除的知识点ID
+     * @return 删除是否成功
+     */
+    boolean deleteKnowledge(Long knowledgeId);
+
+    /**
+     * 删除一批知识点
+     * @param knowledgeIds 要删除的知识点ID列表
+     * @return 删除是否成功
+     */
+    boolean batchDeleteKnowledge(List<Long> knowledgeIds);
 }

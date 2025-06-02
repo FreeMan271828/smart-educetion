@@ -1,7 +1,6 @@
 package org.nuist.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -10,14 +9,7 @@ import org.nuist.bo.KnowledgeBO;
 import org.nuist.dto.ResortKnowledgeDTO;
 import org.nuist.service.KnowledgeService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.nuist.dto.AddKnowledgeDTO;
 import org.nuist.dto.UpdateKnowledgeDTO;
 
@@ -53,6 +45,12 @@ public class KnowledgeController {
     public ResponseEntity<List<KnowledgeBO>> getKnowledgeByTeacherInCourse(@PathVariable Long courseId,
             @PathVariable Long teacherId) {
         return ResponseEntity.ok(knowledgeService.getKnowledgeByTeacherInCourse(courseId, teacherId));
+    }
+
+    @Operation(summary = "根据关键词，搜索标题/描述文本匹配的知识点条目")
+    @GetMapping("/search")
+    public ResponseEntity<List<KnowledgeBO>> searchKnowledge(@RequestParam String keyword) {
+        return ResponseEntity.ok(knowledgeService.searchKnowledge(keyword));
     }
 
     @Operation(summary = "持久化一个知识点", description = "仅保存知识点信息，此操作不会将其与任何课程建立关联")
@@ -96,12 +94,46 @@ public class KnowledgeController {
         }});
     }
 
+    @Operation(summary = "从课程中移除一条知识点", description = "此操作仅会移除关联关系，不会删除知识点实体")
     @DeleteMapping("/course/{courseId}/knowledge/{id}")
     public ResponseEntity<Map<String, Object>> deleteKnowledgeInCourse(@PathVariable Long courseId, @PathVariable Long id) {
         boolean result = knowledgeService.deleteKnowledgeInCourse(id, courseId);
         Map<String, Object> resp = new HashMap<>();
         resp.put("success", result);
-        resp.put("message", result ? "知识点删除成功" : "知识点删除失败");
+        resp.put("message", result ? "知识点移除成功" : "知识点移除失败");
         return ResponseEntity.ok(resp);
+    }
+
+    @Operation(summary = "从课程中移除一批知识点", description = "此操作仅会移除关联关系，不会删除知识点实体")
+    @DeleteMapping("/course/{courseId}/batch")
+    public ResponseEntity<Map<String, Object>> deleteKnowledgeInCourseBatch(
+            @PathVariable Long courseId,
+            @RequestBody List<Long> ids
+    ) {
+        boolean result = knowledgeService.batchDeleteKnowledgeInCourse(ids, courseId);
+        return ResponseEntity.ok(new HashMap<>(){{
+            put("success", result);
+            put("message", result ? "批量移除知识点成功" : "批量移除知识点失败");
+        }});
+    }
+
+    @Operation(summary = "移除知识点持久化")
+    @DeleteMapping("/{knowledgeId}")
+    public ResponseEntity<Map<String, Object>> deleteKnowledgeById(@PathVariable Long knowledgeId) {
+        boolean success = knowledgeService.deleteKnowledge(knowledgeId);
+        return ResponseEntity.ok(new HashMap<>(){{
+            put("success", success);
+            put("message", success ? "删除知识点成功" : "删除知识点失败");
+        }});
+    }
+
+    @Operation(summary = "批量移除知识点持久化")
+    @DeleteMapping("/batch")
+    public ResponseEntity<Map<String, Object>> deleteKnowledgeBatch(@RequestBody List<Long> ids) {
+        boolean success = knowledgeService.batchDeleteKnowledge(ids);
+        return ResponseEntity.ok(new HashMap<>(){{
+            put("success", success);
+            put("message", success ? "批量删除知识点成功" : "批量删除知识点失败");
+        }});
     }
 }

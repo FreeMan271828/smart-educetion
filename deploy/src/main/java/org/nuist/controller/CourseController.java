@@ -1,5 +1,6 @@
 package org.nuist.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.nuist.bo.CourseBO;
 import org.nuist.service.CourseService;
@@ -87,6 +88,12 @@ public class CourseController {
     public ResponseEntity<List<CourseBO>> getCoursesByCategory(@PathVariable("category") String category) {
         List<CourseBO> courses = courseService.getCoursesByCategory(category);
         return ResponseEntity.ok(courses);
+    }
+
+    @Operation(summary = "查询与目标知识点相关联的所有课程")
+    @GetMapping("/knowledge/{knowledgeId}")
+    public ResponseEntity<List<CourseBO>> getCoursesByKnowledgeId(@PathVariable("knowledgeId") Long knowledgeId) {
+        return ResponseEntity.ok(courseService.getCoursesByRelatedKnowledge(knowledgeId));
     }
     
     /**

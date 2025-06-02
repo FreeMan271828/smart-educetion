@@ -9,7 +9,6 @@ import org.nuist.dto.UpdateKnowledgeDTO;
 import org.nuist.mapper.CourseKnowledgeMapper;
 import org.nuist.mapper.KnowledgeMapper;
 import org.nuist.po.CourseKnowledge;
-import org.nuist.po.CoursePO;
 import org.nuist.po.Knowledge;
 import org.nuist.service.KnowledgeService;
 import org.springframework.stereotype.Service;
@@ -69,6 +68,17 @@ public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge
                         Wrappers.<Knowledge>lambdaQuery()
                                 .eq(Knowledge::getTeacherId, teacherId)
                                 .apply("knowledge_id IN (SELECT knowledge_id FROM course_knowledge WHERE course_id = {0})", courseId)
+                )
+        );
+    }
+
+    @Override
+    public List<KnowledgeBO> searchKnowledge(String keyword) {
+        return convertToKnowledgeBO(
+                list(
+                        Wrappers.<Knowledge>lambdaQuery()
+                                .like(Knowledge::getName, keyword)
+                                .or().like(Knowledge::getDescription, keyword)
                 )
         );
     }
@@ -149,32 +159,59 @@ public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge
 
     @Override
     public boolean deleteKnowledgeInCourse(Long id, Long courseId) {
-        int knowledgeDeleteCount = knowledgeMapper.deleteById(id);
+//        int knowledgeDeleteCount = knowledgeMapper.deleteById(id);
         int ckDeleteCount = courseKnowledgeMapper.delete(
                 Wrappers.<CourseKnowledge>lambdaQuery()
                         .eq(CourseKnowledge::getKnowledgeId, id)
         );
-        if (knowledgeDeleteCount <= 0 || ckDeleteCount <= 0) {
+        if (ckDeleteCount <= 0) {
             return false;
         }
-        // 然后还要把剩余的知识点重排序
-        List<CourseKnowledge> cks = courseKnowledgeMapper.selectList(
+        // 还要把剩余的知识点重排序
+        postDeleteKnowledgeInCourse(courseId);
+
+        return true;
+    }
+
+    @Override
+    public boolean batchDeleteKnowledgeInCourse(List<Long> knowledgeIds, Long courseId) {
+        int deleteCount = courseKnowledgeMapper.delete(
                 Wrappers.<CourseKnowledge>lambdaQuery()
                         .eq(CourseKnowledge::getCourseId, courseId)
-                        .orderByAsc(CourseKnowledge::getSequenceNumber)
+                        .in(CourseKnowledge::getKnowledgeId, knowledgeIds)
         );
-        normalizeSequenceNumber(cks);
-        cks.forEach(courseKnowledgeMapper::updateById);
-
-        // 然后检查一下如果删完之后，没有任何课程引用该知识点了，那把该知识点也从数据库中移除
-        cks = courseKnowledgeMapper.selectList(
-                Wrappers.<CourseKnowledge>lambdaQuery()
-                        .eq(CourseKnowledge::getKnowledgeId, id)
-        );
-        if (cks.isEmpty()) {
-            knowledgeMapper.deleteById(id);
+        if (deleteCount <= 0) {
+            return false;
         }
+        postDeleteKnowledgeInCourse(courseId);
+        return true;
+    }
 
+    @Override
+    public boolean deleteKnowledge(Long knowledgeId) {
+        boolean result = removeById(knowledgeId);
+        if (!result) {
+            return false;
+        }
+        // 此时删除所有与该知识点相关的课程关联
+        courseKnowledgeMapper.delete(
+                Wrappers.<CourseKnowledge>lambdaQuery()
+                        .eq(CourseKnowledge::getKnowledgeId, knowledgeId)
+        );
+        return true;
+    }
+
+    @Override
+    public boolean batchDeleteKnowledge(List<Long> knowledgeIds) {
+        boolean result = removeBatchByIds(knowledgeIds);
+        if (!result) {
+            return false;
+        }
+        // 删除所有与这批知识点有关联的课程关联
+        courseKnowledgeMapper.delete(
+                Wrappers.<CourseKnowledge>lambdaQuery()
+                        .in(CourseKnowledge::getKnowledgeId, knowledgeIds)
+        );
         return true;
     }
 
@@ -219,6 +256,28 @@ public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge
         // 再维护多对多关系
         appendKnowledgeToCourse(courseId, copy.getKnowledgeId());
         return KnowledgeBO.fromKnowledge(copy);
+    }
+
+    private void postDeleteKnowledgeInCourse(Long courseId) {
+        // 在课程中删除知识点的后操作：重新排序
+        List<CourseKnowledge> cks = courseKnowledgeMapper.selectList(
+                Wrappers.<CourseKnowledge>lambdaQuery()
+                        .eq(CourseKnowledge::getCourseId, courseId)
+                        .orderByAsc(CourseKnowledge::getSequenceNumber)
+        );
+        normalizeSequenceNumber(cks);
+        cks.forEach(courseKnowledgeMapper::updateById);
+    }
+
+    private void checkAndRemoveIsolatedKnowledge(Long knowledgeId) {
+        // 检查一个知识点是否没有被任何课程引用。如果是，则移除该知识点
+        List<CourseKnowledge> cks = courseKnowledgeMapper.selectList(
+                Wrappers.<CourseKnowledge>lambdaQuery()
+                        .eq(CourseKnowledge::getKnowledgeId, knowledgeId)
+        );
+        if (cks.isEmpty()) {
+            knowledgeMapper.deleteById(knowledgeId);
+        }
     }
 
     private void normalizeSequenceNumber(List<CourseKnowledge> cks) {
