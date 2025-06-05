@@ -1,5 +1,6 @@
 package org.nuist.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.nuist.bo.StudentExamAnswerBO;
 import org.nuist.service.StudentExamService;
@@ -22,6 +23,12 @@ public class StudentExamController  {
     
     @Autowired
     private StudentExamService studentExamService;
+
+    @Operation(summary = "查找已经作答一场考试的学生ID")
+    @GetMapping("/exam/{examId}/students")
+    public ResponseEntity<List<Long>> getStudentsByExam(@PathVariable Long examId) {
+        return ResponseEntity.ok(studentExamService.getStudentIdsByExamId(examId));
+    }
     
     /**
      * 获取学生考试答案

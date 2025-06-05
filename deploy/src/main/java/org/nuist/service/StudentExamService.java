@@ -9,6 +9,13 @@ import java.util.Map;
  * 学生考试服务接口
  */
 public interface StudentExamService {
+
+    /**
+     * 查询一场考试已经有哪些学生作答了
+     * @param examId 考试ID
+     * @return 已作答的学生ID列表
+     */
+    List<Long> getStudentIdsByExamId(Long examId);
     
     /**
      * 获取学生的考试答案

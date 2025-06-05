@@ -37,6 +37,14 @@ public class StudentExamServiceImpl implements StudentExamService {
     private QuestionMapper questionMapper;
 
     @Override
+    public List<Long> getStudentIdsByExamId(Long examId) {
+        if (examId == null) {
+            return new ArrayList<>();
+        }
+        return studentExamMapper.getStudentIdsByExamAnswer(examId);
+    }
+
+    @Override
     public List<StudentExamAnswerBO> getStudentExamAnswers(Long studentId, Long examId) {
         if (studentId == null || examId == null) {
             return new ArrayList<>();
