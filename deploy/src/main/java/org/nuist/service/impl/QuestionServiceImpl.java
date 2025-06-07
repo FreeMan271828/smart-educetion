@@ -75,7 +75,8 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, QuestionPo>
         }
         return convertToQuestionBO(
                 list(Wrappers.<QuestionPo>lambdaQuery()
-                        .eq(QuestionPo::getKnowledgeId, knowledgeId)));
+                        .apply("exam_id IN (SELECT exam_id FROM exam ex WHERE ex.knowledge_id = {0})", knowledgeId)
+                ));
     }
 
     @Override
@@ -89,8 +90,9 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, QuestionPo>
         if (knowledgeId == null) {
             return new ArrayList<>();
         }
-        // 仅包含一个知识点中的问题
-        LambdaQueryWrapper<QuestionPo> wrapper = Wrappers.<QuestionPo>lambdaQuery().eq(QuestionPo::getKnowledgeId, knowledgeId);
+        // 仅包含一个知识点中的问题，通过exam作中间关联
+        LambdaQueryWrapper<QuestionPo> wrapper = Wrappers.<QuestionPo>lambdaQuery()
+                .apply("exam_id IN (SELECT exam_id FROM exam ex WHERE ex.knowledge_id = {0})", knowledgeId);
 
         // 筛选问题类型
         if (StringUtils.hasText(questionType)) {

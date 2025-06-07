@@ -30,6 +30,9 @@ public class QuestionPo {
     @TableField("knowledge_id")
     private Long knowledgeId;
 
+    @TableField("exam_id")
+    private Long examId;
+
     @TableField("reference_answer")
     private String referenceAnswer;
 

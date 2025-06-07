@@ -47,6 +47,11 @@ public class ExamController{
         return ResponseEntity.ok(examService.getExamsByTeacherInCourse(courseId, teacherId));
     }
 
+    @GetMapping("/course/{courseId}/type/{type}")
+    public ResponseEntity<List<ExamBO>> getExamsInCourseByType(@PathVariable Long courseId, @PathVariable String type) {
+        return ResponseEntity.ok(examService.getExamsInCourseByType(courseId, type));
+    }
+
     @PostMapping("/save")
     
     public ResponseEntity<ExamBO> saveExam(@RequestBody ExamBO examBo) {

@@ -40,6 +40,16 @@ public class ExamPo {
     private Long teacherId;
 
     /**
+     * 考试、课后习题等类型
+     */
+    private String type;
+
+    /**
+     * 若是课后习题，则记录关联的知识点
+     */
+    private Long knowledgeId;
+
+    /**
      * 试卷满分
      */
     @TableField("total_score")

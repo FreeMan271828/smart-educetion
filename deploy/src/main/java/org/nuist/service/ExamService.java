@@ -35,6 +35,14 @@ public interface ExamService {
     List<ExamBO> getExamsByTeacherInCourse(Long courseId, Long teacherId);
 
     /**
+     * 在课程中按照类型（考试/练习题）来查找exam
+     * @param courseId 课程ID
+     * @param type 类型
+     * @return 考试列表
+     */
+    List<ExamBO> getExamsInCourseByType(Long courseId, String type);
+
+    /**
      * 持久化一个考试实体
      * @param examBo dto
      * @return 持久化后的业务对象（附带主键和时间字段）
