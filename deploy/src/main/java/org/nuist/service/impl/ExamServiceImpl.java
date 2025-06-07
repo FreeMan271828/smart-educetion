@@ -8,6 +8,7 @@ import org.nuist.po.ExamPo;
 import org.nuist.service.ExamService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -64,17 +65,22 @@ public class ExamServiceImpl implements ExamService {
     }
 
     @Override
+    public List<ExamBO> getExamsInCourseByType(Long courseId, String type) {
+        if (courseId == null || !StringUtils.hasText(type)) {
+            return new ArrayList<>();
+        }
+        return convertToExamBO(
+                examMapper.selectList(
+                        Wrappers.<ExamPo>lambdaQuery()
+                                .eq(ExamPo::getCourseId, courseId)
+                                .eq(ExamPo::getType, type)
+                )
+        );
+    }
+
+    @Override
     public ExamBO saveExam(ExamBO examBo) {
-        ExamPo persistedExamPo = new ExamPo();
-        persistedExamPo.setTitle(examBo.getTitle());
-        persistedExamPo.setDescription(examBo.getDescription());
-        persistedExamPo.setCourseId(examBo.getCourseId());
-        persistedExamPo.setTeacherId(examBo.getTeacherId());
-        persistedExamPo.setTotalScore(examBo.getTotalScore());
-        persistedExamPo.setDurationMinutes(examBo.getDurationMinutes());
-        persistedExamPo.setStartTime(examBo.getStartTime());
-        persistedExamPo.setEndTime(examBo.getEndTime());
-        persistedExamPo.setStatus(examBo.getStatus());
+        ExamPo persistedExamPo = examBo.toExam();
 
         examMapper.insert(persistedExamPo);
         return ExamBO.fromExam(persistedExamPo);

@@ -1,5 +1,6 @@
 package org.nuist.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -47,7 +48,7 @@ public class QuestionController {
     }
 
     @GetMapping("/knowledge/{knowledgeId}")
-    
+    @Operation(summary = "查找属于一个知识点的课后习题", description = "实现为通过exam找出属于一个知识点的课后习题exam，并返回对应question")
     public ResponseEntity<List<QuestionBO>> getQuestionsByKnowledge(@PathVariable Long knowledgeId) {
         return ResponseEntity.ok(questionService.getQuestionsByKnowledgeId(knowledgeId));
     }
@@ -67,7 +68,7 @@ public class QuestionController {
     }
 
     @PostMapping("/save")
-    
+    @Operation(summary = "保存一个问题", description = "目前，所有问题应当与考试关联（通过examId），考试再与知识点关联")
     public ResponseEntity<QuestionBO> saveQuestion(@RequestBody QuestionBO questionBO) {
         return ResponseEntity.ok(questionService.saveQuestion(questionBO));
     }
