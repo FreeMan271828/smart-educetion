@@ -24,6 +24,22 @@ public interface StudentExamService {
      * @return 考试答案列表
      */
     List<StudentExamAnswerBO> getStudentExamAnswers(Long studentId, Long examId);
+
+    /**
+     * 查看学生是否已经作答过一场Exam
+     * @param studentId 学生ID
+     * @param examId 考试ID
+     * @return true:=已经作答，false:=未作答
+     */
+    Boolean getIfExamAnsweredByStudent(Long studentId, Long examId);
+
+    /**
+     * 查看学生是否已经作答过一批Exams
+     * @param studentId 学生ID
+     * @param examIds 考试ID列表
+     * @return 结果列表
+     */
+    List<Boolean> batchGetIfExamsAnsweredByStudent(Long studentId, List<Long> examIds);
     
     /**
      * 根据考试标题模糊查询学生的考试答案

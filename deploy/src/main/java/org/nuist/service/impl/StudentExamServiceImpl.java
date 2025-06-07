@@ -57,6 +57,28 @@ public class StudentExamServiceImpl implements StudentExamService {
         List<StudentExamAnswerPO> poList = studentExamMapper.selectList(queryWrapper);
         return convertToBOList(poList);
     }
+
+    @Override
+    public Boolean getIfExamAnsweredByStudent(Long studentId, Long examId) {
+        Long studentExamCount = studentExamMapper.selectCount(
+                Wrappers.<StudentExamAnswerPO>lambdaQuery()
+                        .eq(StudentExamAnswerPO::getExamId, examId)
+                        .eq(StudentExamAnswerPO::getStudentId, studentId)
+        );
+        return studentExamCount > 0;
+    }
+
+    @Override
+    public List<Boolean> batchGetIfExamsAnsweredByStudent(Long studentId, List<Long> examIds) {
+        return examIds.stream().map(examId -> {
+            Long studentExamCount = studentExamMapper.selectCount(
+                    Wrappers.<StudentExamAnswerPO>lambdaQuery()
+                        .eq(StudentExamAnswerPO::getStudentId, studentId)
+                        .eq(StudentExamAnswerPO::getExamId, examId)
+            );
+            return studentExamCount > 0;
+        }).toList();
+    }
     
     @Override
     public List<StudentExamAnswerBO> getStudentExamAnswersByTitle(Long studentId, String examTitle) {

@@ -29,6 +29,18 @@ public class StudentExamController  {
     public ResponseEntity<List<Long>> getStudentsByExam(@PathVariable Long examId) {
         return ResponseEntity.ok(studentExamService.getStudentIdsByExamId(examId));
     }
+
+    @Operation(summary = "查看一个学生是否已经有一场考试作答记录")
+    @GetMapping("/student/{studentId}/exam/{examId}/if-answered")
+    public ResponseEntity<Boolean> getIfExamAnswered(@PathVariable Long studentId, @PathVariable Long examId) {
+        return ResponseEntity.ok(studentExamService.getIfExamAnsweredByStudent(studentId, examId));
+    }
+
+    @Operation(summary = "查看一个学生是否有一批考试的作答记录")
+    @GetMapping("/student/{studentId}/exams/if-answered")
+    public ResponseEntity<List<Boolean>> batchIfExamsAnswered(@PathVariable Long studentId, @RequestParam List<Long> examIds) {
+        return ResponseEntity.ok(studentExamService.batchGetIfExamsAnsweredByStudent(studentId, examIds));
+    }
     
     /**
      * 获取学生考试答案
