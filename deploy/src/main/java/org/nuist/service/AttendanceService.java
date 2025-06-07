@@ -17,6 +17,13 @@ public interface AttendanceService {
      * @return 考勤记录列表
      */
     List<AttendanceBO> getStudentAttendance(Long studentId);
+
+    /**
+     * 查询课程中的所有考勤记录
+     * @param courseId 课程ID
+     * @return 考勤记录列表
+     */
+    List<AttendanceBO> getCourseAttendance(Long courseId);
     
     /**
      * 获取学生在特定课程的考勤记录

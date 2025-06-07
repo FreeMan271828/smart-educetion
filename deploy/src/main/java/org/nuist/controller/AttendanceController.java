@@ -34,6 +34,11 @@ public class AttendanceController {
         List<AttendanceBO> attendanceList = attendanceService.getStudentAttendance(studentId);
         return ResponseEntity.ok(attendanceList);
     }
+
+    @GetMapping("/course/{courseId}")
+    public ResponseEntity<List<AttendanceBO>> getCourseAttendance(@PathVariable("courseId") Long courseId) {
+        return ResponseEntity.ok(attendanceService.getCourseAttendance(courseId));
+    }
     
     /**
      * 获取学生某课程的考勤记录

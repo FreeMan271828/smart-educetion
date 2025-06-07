@@ -46,6 +46,17 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
         List<AttendancePO> poList = list(queryWrapper);
         return convertToBOList(poList);
     }
+
+    @Override
+    public List<AttendanceBO> getCourseAttendance(Long courseId) {
+        if (courseId == null) {
+            return new ArrayList<>();
+        }
+        return convertToBOList(list(
+                Wrappers.<AttendancePO>lambdaQuery()
+                        .eq(AttendancePO::getCourseId, courseId)
+        ));
+    }
     
     @Override
     public List<AttendanceBO> getStudentCourseAttendance(Long studentId, Long courseId) {
