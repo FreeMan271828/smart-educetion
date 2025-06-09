@@ -405,7 +405,17 @@ public class AttendanceServiceImpl extends ServiceImpl<AttendanceMapper, Attenda
         List<AttendancePO> poList = list(queryWrapper);
         return convertToBOList(poList);
     }
-    
+
+    @Override
+    public boolean deleteAttendance(Long attendanceId) {
+        return attendanceMapper.deleteById(attendanceId) > 0;
+    }
+
+    @Override
+    public boolean batchDeleteAttendance(List<Long> attendanceIds) {
+        return attendanceMapper.deleteByIds(attendanceIds) > 0;
+    }
+
     /**
      * 将PO列表转换为BO列表
      * @param poList PO列表

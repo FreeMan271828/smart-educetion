@@ -1,5 +1,6 @@
 package org.nuist.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.nuist.bo.AttendanceBO;
 import org.nuist.service.AttendanceService;
@@ -238,5 +239,25 @@ public class AttendanceController {
             @RequestParam(value = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
         List<AttendanceBO> attendanceList = attendanceService.searchAttendance(studentId, keywords, status, startDate, endDate);
         return ResponseEntity.ok(attendanceList);
+    }
+
+    @Operation(summary = "根据考勤ID删除考勤实体")
+    @DeleteMapping("/{attendanceId}")
+    public ResponseEntity<Map<String, Object>> deleteAttendance(@PathVariable Long attendanceId) {
+        boolean success = attendanceService.deleteAttendance(attendanceId);
+        return ResponseEntity.ok(new HashMap<>(){{
+            put("success", success);
+            put("message", success ? "考勤删除成功" : "考勤删除失败");
+        }});
+    }
+
+    @Operation(summary = "批量删除考勤实体")
+    @DeleteMapping("/batch")
+    public ResponseEntity<Map<String, Object>> batchDeleteAttendance(@RequestBody List<Long> attendanceIds) {
+        boolean success = attendanceService.batchDeleteAttendance(attendanceIds);
+        return ResponseEntity.ok(new HashMap<>(){{
+            put("success", success);
+            put("message", success ? "考勤删除成功" : "考勤删除失败");
+        }});
     }
 } 

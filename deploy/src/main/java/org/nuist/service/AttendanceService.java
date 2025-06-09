@@ -125,4 +125,18 @@ public interface AttendanceService {
      * @return 考勤记录列表
      */
     List<AttendanceBO> searchAttendance(Long studentId, String keywords, String status, LocalDate startDate, LocalDate endDate);
+
+    /**
+     * 根据考勤ID删除一个持久化考勤实体
+     * @param attendanceId 考勤ID
+     * @return 删除是否成功
+     */
+    boolean deleteAttendance(Long attendanceId);
+
+    /**
+     * 批量删除考勤持久化实体
+     * @param attendanceIds 考勤ID列表
+     * @return 删除是否成功
+     */
+    boolean batchDeleteAttendance(List<Long> attendanceIds);
 } 
