@@ -258,12 +258,12 @@ public class StudentExamServiceImpl implements StudentExamService {
             return new ArrayList<>();
         }
         
-        QueryWrapper<StudentExamAnswerPO> queryWrapper = Wrappers.<StudentExamAnswerPO>query()
-                .select("exam_id", "exam_title", "SUM(score) as total_score", "COUNT(1) as question_count", "MAX(updated_at) as exam_time")
-                .eq("student_id", studentId)
-                .groupBy("exam_id", "exam_title");
+//        QueryWrapper<StudentExamAnswerPO> queryWrapper = Wrappers.<StudentExamAnswerPO>query()
+//                .select("exam_id", "exam_title", "SUM(score) as total_score", "COUNT(1) as question_count", "MAX(updated_at) as exam_time")
+//                .eq("student_id", studentId)
+//                .groupBy("exam_id", "exam_title");
                 
-        return studentExamMapper.selectMaps(queryWrapper);
+        return studentExamMapper.getStudentExamScores(studentId);
     }
     
     @Override
@@ -272,13 +272,13 @@ public class StudentExamServiceImpl implements StudentExamService {
             return new ArrayList<>();
         }
         
-        QueryWrapper<StudentExamAnswerPO> queryWrapper = Wrappers.<StudentExamAnswerPO>query()
-                .select("exam_id", "exam_title", "SUM(score) as total_score", "COUNT(1) as question_count", "MAX(updated_at) as exam_time")
-                .eq("student_id", studentId)
-                .like("exam_title", "%" + titleKeywords + "%")
-                .groupBy("exam_id", "exam_title");
+//        QueryWrapper<StudentExamAnswerPO> queryWrapper = Wrappers.<StudentExamAnswerPO>query()
+//                .select("exam_id", "exam_title", "SUM(score) as total_score", "COUNT(1) as question_count", "MAX(updated_at) as exam_time")
+//                .eq("student_id", studentId)
+//                .like("exam_title", "%" + titleKeywords + "%")
+//                .groupBy("exam_id", "exam_title");
                 
-        return studentExamMapper.selectMaps(queryWrapper);
+        return studentExamMapper.searchStudentExamScores(studentId, titleKeywords);
     }
     
     @Override
