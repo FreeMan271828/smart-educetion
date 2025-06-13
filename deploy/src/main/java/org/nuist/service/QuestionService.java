@@ -60,6 +60,13 @@ public interface QuestionService {
     );
 
     /**
+     * 查找属于一个考试的问题
+     * @param examId 考试ID
+     * @return 该考试中的问题列表
+     */
+    List<QuestionBO> getQuestionsInExam(Long examId);
+
+    /**
      * 保存一个问题
      * @param questionBO 问题业务对象
      * @return 保存后的问题对象（附带主键和时间字段）

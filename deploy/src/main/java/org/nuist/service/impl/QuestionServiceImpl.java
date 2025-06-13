@@ -115,6 +115,16 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, QuestionPo>
     }
 
     @Override
+    public List<QuestionBO> getQuestionsInExam(Long examId) {
+        if (examId == null) {
+            return new ArrayList<>();
+        }
+        return convertToQuestionBO(
+                list(Wrappers.<QuestionPo>lambdaQuery().eq(QuestionPo::getExamId, examId))
+        );
+    }
+
+    @Override
     public QuestionBO saveQuestion(QuestionBO questionBO) {
         QuestionPo persistedQuestionPo = questionBO.toQuestion();
         

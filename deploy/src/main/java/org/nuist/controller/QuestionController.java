@@ -24,25 +24,25 @@ public class QuestionController {
     private final QuestionService questionService;
 
     @GetMapping("/{questionId}")
-    
+
     public ResponseEntity<QuestionBO> getQuestionById(@PathVariable Long questionId) {
         return ResponseEntity.ok(questionService.getQuestionById(questionId));
     }
 
     @GetMapping("/teacher/{teacherId}")
-    
+
     public ResponseEntity<List<QuestionBO>> getQuestionsByTeacher(@PathVariable Long teacherId) {
         return ResponseEntity.ok(questionService.getQuestionsByTeacherId(teacherId));
     }
 
     @GetMapping("/type/{questionType}")
-    
+
     public ResponseEntity<List<QuestionBO>> getQuestionsByType(@PathVariable String questionType) {
         return ResponseEntity.ok(questionService.getQuestionsByType(questionType));
     }
 
     @GetMapping("/difficulty/{difficulty}")
-    
+
     public ResponseEntity<List<QuestionBO>> getQuestionsByDifficulty(@PathVariable String difficulty) {
         return ResponseEntity.ok(questionService.getQuestionsByDifficulty(difficulty));
     }
@@ -54,7 +54,7 @@ public class QuestionController {
     }
 
     @GetMapping("/knowledge/{knowledgeId}/conditions")
-    
+
     public ResponseEntity<List<QuestionBO>> searchQuestionsInKnowledgeConditionally(
             @PathVariable Long knowledgeId,
             @RequestParam(required = false) String questionType,
@@ -65,6 +65,11 @@ public class QuestionController {
         return ResponseEntity.ok(questionService.getQuestionsByConditionInKnowledge(
                 knowledgeId, questionType, difficulty, startTime, endTime)
         );
+    }
+
+    @GetMapping("/exam/{examId}")
+    public ResponseEntity<List<QuestionBO>> getQuestionsByExam(@PathVariable Long examId) {
+        return ResponseEntity.ok(questionService.getQuestionsInExam(examId));
     }
 
     @PostMapping("/save")
