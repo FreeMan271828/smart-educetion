@@ -9,7 +9,9 @@ import org.nuist.dto.UpdateTeacherDTO;
 import org.nuist.entity.TokenResponse;
 import org.nuist.enums.RoleEnum;
 import org.nuist.mapper.TeacherMapper;
+import org.nuist.mapper.UserMapper;
 import org.nuist.po.TeacherPO;
+import org.nuist.po.User;
 import org.nuist.service.TeacherService;
 import org.nuist.service.UserService;
 import org.springframework.stereotype.Service;
@@ -23,6 +25,7 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, TeacherPO> im
 
     private final TeacherMapper teacherMapper;
     private final UserService userService;
+    private final UserMapper userMapper;
 
     @Override
     public TeacherBO getTeacherById(Long id) {
@@ -65,7 +68,51 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, TeacherPO> im
 
     @Override
     public TeacherBO updateTeacher(UpdateTeacherDTO updateTeacherDTO) {
-        // TODO 可以等Student和Teacher与Auth模块的User集成之后，再实现这里的正确逻辑
-        return null;
+        if (updateTeacherDTO == null || updateTeacherDTO.getTeacherId() == null) {
+            return null;
+        }
+        TeacherPO teacher = teacherMapper.selectById(updateTeacherDTO.getTeacherId());
+        if (teacher == null) {
+            return null;
+        }
+        if (StringUtils.hasText(updateTeacherDTO.getFullName())) {
+            teacher.setFullName(updateTeacherDTO.getFullName());
+        }
+        if (StringUtils.hasText(updateTeacherDTO.getPhone())) {
+            teacher.setPhone(updateTeacherDTO.getPhone());
+        }
+        if (StringUtils.hasText(updateTeacherDTO.getEmail())) {
+            teacher.setEmail(updateTeacherDTO.getEmail());
+        }
+        teacherMapper.updateById(teacher);
+        return TeacherBO.fromTeacherPO(teacher);
+    }
+
+    @Override
+    public boolean changeTeacherUsername(Long id, String username) {
+        if (id == null) {
+            return false;
+        }
+        TeacherPO teacher = teacherMapper.selectById(id);
+        if (teacher == null) {
+            return false;
+        }
+        // 检查可用用户名
+        if (!userService.checkUsername(username)) {
+            return false;
+        }
+        // 同时更新User. 如果Teacher能查到not null，那么user一定存在，无需再判断null
+        User user = userMapper.selectOne(
+                Wrappers.<User>lambdaQuery().eq(User::getUsername, teacher.getUsername())
+        );
+        teacher.setUsername(username);
+        user.setUsername(username);
+        try {
+            teacherMapper.updateById(teacher);
+            userMapper.updateById(user);
+        } catch (Exception e) {
+            return false;
+        }
+        return true;
     }
 }

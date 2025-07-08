@@ -3,12 +3,17 @@ package org.nuist.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.nuist.bo.StudentBO;
+import org.nuist.entity.TokenResponse;
+import org.nuist.enums.RoleEnum;
 import org.nuist.mapper.StudentMapper;
+import org.nuist.mapper.UserMapper;
 import org.nuist.po.StudentPO;
+import org.nuist.po.User;
 import org.nuist.service.StudentService;
 import org.nuist.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
@@ -20,6 +25,7 @@ import java.util.stream.Collectors;
  * 学生服务实现类
  */
 @Service
+@Transactional
 public class StudentServiceImpl implements StudentService {
 
     @Autowired
@@ -27,6 +33,9 @@ public class StudentServiceImpl implements StudentService {
 
     @Autowired
     private StudentMapper studentMapper;
+
+    @Autowired
+    private UserMapper userMapper;
 
     @Override
     public StudentBO getStudentById(Long studentId) {
@@ -99,15 +108,15 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
-    public StudentBO registerStudent(StudentBO studentBO) {
+    public TokenResponse registerStudent(StudentBO studentBO) {
         StudentPO studentPO = new StudentPO();
         studentPO.setUsername(studentBO.getUsername());
         studentPO.setEmail(studentBO.getEmail());
         studentPO.setFullName(studentBO.getFullName());
         studentPO.setPhone(studentBO.getPhone());
-        Integer id = studentMapper.insert(studentPO);
+        studentMapper.insert(studentPO);
 
-        return StudentBO.fromPO(studentMapper.selectById(id));
+        return userService.register(studentBO.getUsername(), studentBO.getPassword(), RoleEnum.STUDENT);
     }
 
     @Override
@@ -163,7 +172,35 @@ public class StudentServiceImpl implements StudentService {
         
         return false;
     }
-    
+
+    @Override
+    public boolean changeStudentUsername(Long studentId, String username) {
+        if (studentId == null) {
+            return false;
+        }
+        StudentPO studentPO = studentMapper.selectById(studentId);
+        if (studentPO == null) {
+            return false;
+        }
+        // 检查可用用户名
+        if (!userService.checkUsername(username)) {
+            return false;
+        }
+        User user = userMapper.selectOne(
+                Wrappers.<User>lambdaQuery()
+                        .eq(User::getUsername, studentPO.getUsername())
+        );
+        studentPO.setUsername(username);
+        user.setUsername(username);
+        try {
+            studentMapper.updateById(studentPO);
+            userMapper.updateById(user);
+        } catch (Exception e) {
+            return false;
+        }
+        return true;
+    }
+
     @Override
     public List<StudentBO> searchStudents(String keywords, String grade, String className) {
         LambdaQueryWrapper<StudentPO> queryWrapper = Wrappers.<StudentPO>lambdaQuery();

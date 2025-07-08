@@ -1,7 +1,9 @@
 package org.nuist.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.nuist.bo.StudentBO;
+import org.nuist.entity.TokenResponse;
 import org.nuist.service.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -113,12 +115,12 @@ public class StudentController {
     }
     
     /**
-     * 保存或更新学生信息
+     * 更新学生信息
      * @param student 学生信息
      * @return 保存结果
      */
     
-    @PostMapping("/save")
+    @PostMapping("/update")
     public ResponseEntity<Map<String, Object>> saveOrUpdateStudent(@RequestBody StudentBO student) {
         Long studentId = studentService.saveOrUpdateStudent(student);
         
@@ -143,8 +145,18 @@ public class StudentController {
 
     @PostMapping("/register")
     
-    public ResponseEntity<StudentBO> registerStudent(@RequestBody StudentBO dto) {
+    public ResponseEntity<TokenResponse> registerStudent(@RequestBody StudentBO dto) {
         return ResponseEntity.ok(studentService.registerStudent(dto));
+    }
+
+    @PutMapping("/{id}/change-username/{username}")
+    @Operation(summary = "修改学生用户名", description = "执行该操作前，请先使用/auth/check-available-username检查可用用户名")
+    public ResponseEntity<Map<String, Object>> changeUsername(@PathVariable("id") Long id, @PathVariable("username") String username) {
+        boolean success = studentService.changeStudentUsername(id, username);
+        return ResponseEntity.ok(new HashMap<>(){{
+            put("success", success);
+            put("message", success ? "用户名修改成功，请重新登录" : "用户名修改失败，请检查用户名可用性");
+        }});
     }
     
 //    /**

@@ -1,6 +1,7 @@
 package org.nuist.service;
 
 import org.nuist.bo.StudentBO;
+import org.nuist.entity.TokenResponse;
 
 import java.util.List;
 
@@ -39,6 +40,7 @@ public interface StudentService {
     
     /**
      * 保存或更新学生信息
+     * > 其调用方限定为仅进行更新操作。保存操作由register接口完成
      * @param studentBO 学生业务对象
      * @return 保存后的学生ID
      */
@@ -49,7 +51,7 @@ public interface StudentService {
      * @param studentBO 注册必要信息
      * @return JWT token
      */
-    StudentBO registerStudent(StudentBO studentBO);
+    TokenResponse registerStudent(StudentBO studentBO);
     
     /**
      * 根据班级和年级获取学生列表
@@ -75,7 +77,15 @@ public interface StudentService {
      * @return 是否修改成功
      */
     boolean changePassword(Long studentId, String oldPassword, String newPassword);
-    
+
+    /**
+     * 修改学生用户用户名
+     * @param studentId 待修改的学生ID
+     * @param username 新用户名
+     * @return 修改是否成功
+     */
+    boolean changeStudentUsername(Long studentId, String username);
+
     /**
      * 多条件模糊查询学生
      * @param keywords 关键词(可匹配姓名、用户名、邮箱等)

@@ -21,8 +21,20 @@ public interface TeacherService {
      */
     TeacherBO getTeacherByUsername(String username);
 
+    /**
+     * 注册教师用户
+     * @param addTeacherDTO dto
+     * @return 登录Token
+     */
     TokenResponse saveTeacher(AddTeacherDTO addTeacherDTO);
 
     TeacherBO updateTeacher(UpdateTeacherDTO updateTeacherDTO);
+
+    /**
+     * @param id 目标教师ID
+     * @param username 新用户名
+     * @return 修改是否成功
+     */
+    boolean changeTeacherUsername(Long id, String username);
 
 }
