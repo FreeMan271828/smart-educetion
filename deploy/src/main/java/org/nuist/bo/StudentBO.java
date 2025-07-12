@@ -15,10 +15,10 @@ import java.time.LocalDateTime;
 public class StudentBO {
     
     private Long studentId;
-    private @NonNull String username;
+    private String username;
     private String password;   // 由于Student注册接口使用了business object，所以此处还要记录password字段
     private String email;
-    private @NonNull String fullName;
+    private String fullName;
     private String phone;
     private String grade;
     private String className;
