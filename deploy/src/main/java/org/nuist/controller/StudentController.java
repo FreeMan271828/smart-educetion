@@ -120,8 +120,8 @@ public class StudentController {
      * @return 保存结果
      */
     
-    @PostMapping("/update")
-    public ResponseEntity<Map<String, Object>> saveOrUpdateStudent(@RequestBody StudentBO student) {
+    @PutMapping("/update")
+    public ResponseEntity<Map<String, Object>> updateStudent(@RequestBody StudentBO student) {
         Long studentId = studentService.saveOrUpdateStudent(student);
         
         Map<String, Object> result = new HashMap<>();
