@@ -1,15 +1,20 @@
 package org.nuist.service.impl;
 
+import org.nuist.bo.CourseBO;
+import org.nuist.bo.KnowledgeBO;
+import org.nuist.service.CourseService;
+import org.nuist.service.KnowledgeService;
 import org.nuist.service.StudentAssistantService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Flux;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * 学生在线学习助手服务实现类
@@ -17,112 +22,241 @@ import java.util.UUID;
 @Service
 public class StudentAssistantServiceImpl implements StudentAssistantService {
 
+    private final WebClient webClient;
+
+    @Autowired
+    KnowledgeService knowledgeService;
+
+    @Autowired
+    CourseService courseService;
+
+    @Autowired
+    public StudentAssistantServiceImpl(WebClient webClient) {
+        this.webClient = webClient; // 正确注入WebClient
+    }
+
+    private Map<String, Object> createRequestBody(String question) {
+        return Collections.singletonMap(
+                "messages",
+                List.of(
+                        Map.of(
+                                "role", "user",
+                                "content", question
+                        )
+                )
+        );
+    }
+
     @Override
     public Map<String, Object> askQuestion(Long studentId, String question, Long courseId) {
         if (studentId == null || !StringUtils.hasText(question)) {
             return new HashMap<>();
         }
-        
-        // 实际实现中，这里可能需要调用自然语言处理服务或AI服务来生成回答
-        // 这里简化实现，返回模拟数据
-        Map<String, Object> response = new HashMap<>();
-        response.put("questionId", generateQuestionId());
-        response.put("studentId", studentId);
-        response.put("question", question);
-        
+        if(courseId != null){
+            CourseBO course=courseService.getCourseById(courseId);
+            question = "关于课程《" + course.getName() + "》的问题（如果你觉得课程与问题相关则参考该课程的内容回答，如果无关则忽略课程名）：" + question;
+        }
+        ParameterizedTypeReference<Map<String, Object>> typeRef =
+                new ParameterizedTypeReference<>() {};
+        return webClient.post()
+                .uri("/chat/plain")
+                .bodyValue(createRequestBody(question))
+                .retrieve()
+                .bodyToMono(typeRef).block();
+
+    }
+
+
+    @Override
+    public Map<String, Object> generateExerciseByCourseName(Long studentId, String courseName,
+                                                            String difficultyLevel,
+                                                            Integer questionCount) {
+        // 1. 验证必要参数
+        if (questionCount == null || questionCount < 1) {
+            throw new IllegalArgumentException("题目数量必须大于0");
+        }
+        if (courseName == null || courseName.trim().isEmpty()) {
+            throw new IllegalArgumentException("课程名称不能为空");
+        }
+
+        // 2. 构建练习生成提示
+        String prompt = buildExercisePrompt(courseName, difficultyLevel, questionCount);
+
+        // 3. 创建请求体
+        Map<String, Object> requestBody = createRequestBody(prompt);
+
+        // 4. 调用非流式接口
+        return webClient.post()
+                .uri("/chat/plain")
+                .bodyValue(requestBody)
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
+                .block(Duration.ofSeconds(60));
+    }
+    /**
+     * 构建练习生成提示
+     */
+    private String buildExercisePrompt(String courseName,
+                                       String difficultyLevel,
+                                       Integer questionCount) {
+        StringBuilder prompt = new StringBuilder("生成")
+                .append(questionCount)
+                .append("道关于《")
+                .append(courseName)
+                .append("》课程的练习题")
+                .append("要求：\n" +
+                        "1. 不使用任何 LaTeX 符号\n" +
+                        "2. 所有数学表达式用标准键盘可输入的格式\n" +
+                        "3. 包含完整题目、选项、答案和解析\n"+
+                        "4. 如果题目数量大于1，则尽量出不同的题型\n");
+
+
+        if (difficultyLevel != null && !difficultyLevel.trim().isEmpty()) {
+            prompt.append("，题目难度：").append(difficultyLevel);
+        }
+
+        prompt.append("。请按照以下格式返回题目：\n\n");
+        prompt.append("题目: [题目内容]\n");
+        prompt.append("如果该题为选择题，则需要在题目与答案之间添加：选项: A.[选项A] B.[选项B] C.[选项C] D.[选项D]\n");
+        prompt.append("答案: [正确答案]\n");
+        prompt.append("解析: [题目解析]\n\n");
+
+        return prompt.toString();
+    }
+
+
+    @Override
+    public Map<String, Object> generateExerciseByKnowledgeNames(Long studentId,
+                                                                List<String> knowledgeNames,
+                                                                String difficultyLevel,
+                                                                Integer questionCount) {
+        // 1. 验证必要参数
+        if (questionCount == null || questionCount < 1) {
+            throw new IllegalArgumentException("题目数量必须大于0");
+        }
+        if (knowledgeNames == null || knowledgeNames.isEmpty()) {
+            throw new IllegalArgumentException("至少需要一个知识点名称");
+        }
+
+        // 2. 构建练习生成提示
+        String prompt = buildExercisePrompt(knowledgeNames, difficultyLevel, questionCount);
+
+        // 3. 创建请求体
+        Map<String, Object> requestBody = createRequestBody(prompt);
+
+        // 4. 调用非流式接口
+        return webClient.post()
+                .uri("/chat/plain")
+                .bodyValue(requestBody)
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
+                .block(Duration.ofSeconds(60));
+    }
+
+    /**
+     * 构建基于知识点的练习生成提示
+     */
+    private String buildExercisePrompt(List<String> knowledgeNames,
+                                       String difficultyLevel,
+                                       Integer questionCount) {
+        // 拼接知识点名称
+        String knowledgeList = String.join("、", knowledgeNames);
+
+        StringBuilder prompt = new StringBuilder("生成")
+                .append(questionCount)
+                .append("道关于知识点【")
+                .append(knowledgeList)
+                .append("】的练习题")
+                .append("要求：\n" +
+                        "1. 不使用任何 LaTeX 符号\n" +
+                        "2. 所有数学表达式用标准键盘可输入的格式\n" +
+                        "3. 包含完整题目、选项、答案和解析\n"+
+                        "4. 如果题目数量大于1，则尽量出不同的题型\n");
+
+        if (difficultyLevel != null && !difficultyLevel.trim().isEmpty()) {
+            prompt.append("，题目难度：").append(difficultyLevel);
+        }
+
+        prompt.append("。请按照以下格式返回题目：\n\n");
+        prompt.append("题目: [题目内容]\n");
+        prompt.append("如果该题为选择题，则需要在题目与答案之间添加：选项: A.[选项A] B.[选项B] C.[选项C] D.[选项D]\n");
+        prompt.append("答案: [正确答案]\n");
+        prompt.append("解析: [题目解析]\n\n");
+
+        return prompt.toString();
+    }
+
+
+
+
+    /**
+     * 流式生成个性化练习
+     */
+    public Flux<String> generateExerciseStream(Long studentId, Long courseId,
+                                               List<Long> knowledgeIds,
+                                               String difficultyLevel,
+                                               Integer questionCount) {
+        // 1. 构建练习生成提示
+        String prompt = buildExercisePrompt(courseId, knowledgeIds, difficultyLevel, questionCount);
+
+        // 2. 调用流式接口生成练习
+        return callExerciseGenerationStream(prompt)
+                .timeout(Duration.ofSeconds(120)); // 设置超时时间
+    }
+
+    /**
+     * 构建练习生成提示
+     */
+    private String buildExercisePrompt(Long courseId, List<Long> knowledgeIds,
+                                       String difficultyLevel, Integer questionCount) {
+        StringBuilder prompt = new StringBuilder("生成")
+                .append(questionCount)
+                .append("道练习题");
+
         if (courseId != null) {
-            response.put("courseId", courseId);
-            // 查询课程名称（实际实现中应该从数据库获取）
-            response.put("courseName", "课程" + courseId);
+            CourseBO course = courseService.getCourseById(courseId);
+            if(course != null) {
+                prompt.append("，课程名称：").append(course.getName());
+            }
         }
-        
-        response.put("answer", generateSampleAnswer(question));
-        response.put("confidence", 0.85);
-        response.put("timestamp", LocalDateTime.now());
-        
-        // 添加相关资源推荐
-        response.put("relatedResources", generateSampleResources());
-        
-        return response;
+        if(knowledgeIds != null && !knowledgeIds.isEmpty()){
+            prompt.append("，知识点：");
+            for(Long knowledgeId : knowledgeIds) {
+                KnowledgeBO knowledge = knowledgeService.getKnowledgeById(knowledgeId);
+                if(knowledge != null) {
+                    prompt.append("1：").append(knowledge.getName());
+                }
+
+            }
+        }
+        if(difficultyLevel!=null){
+            prompt.append("，题目难度：").append(difficultyLevel);
+        }
+        prompt.append("。请按照以下格式返回题目：\n\n");
+        prompt.append("题目: [题目内容]\n");
+        prompt.append("选项: A.[选项A] B.[选项B] C.[选项C] D.[选项D]\n");
+        prompt.append("答案: [正确答案]\n");
+        prompt.append("解析: [题目解析]\n\n");
+
+        return prompt.toString();
     }
-    
-    @Override
-    public Map<String, Object> askQuestionByCourseName(Long studentId, String question, String courseName) {
-        if (studentId == null || !StringUtils.hasText(question) || !StringUtils.hasText(courseName)) {
-            return new HashMap<>();
-        }
-        
-        // 通过课程名称查找课程ID（实际实现中应该查询数据库）
-        Long courseId = findCourseIdByName(courseName);
-        
-        if (courseId == null) {
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("error", "未找到课程: " + courseName);
-            return errorResponse;
-        }
-        
-        Map<String, Object> response = askQuestion(studentId, question, courseId);
-        response.put("courseName", courseName);
-        
-        return response;
+
+    /**
+     * 调用流式练习生成接口
+     */
+    private Flux<String> callExerciseGenerationStream(String prompt) {
+        return webClient.post()
+                .uri("/chat/stream/plain")
+                .bodyValue(createRequestBody(prompt))
+                .retrieve()
+                .bodyToFlux(String.class);
     }
-    
-    @Override
-    public Map<String, Object> askQuestionByKnowledgeName(Long studentId, String question, String knowledgeName) {
-        if (studentId == null || !StringUtils.hasText(question) || !StringUtils.hasText(knowledgeName)) {
-            return new HashMap<>();
-        }
-        
-        // 通过知识点名称查找知识点ID和所属课程ID（实际实现中应该查询数据库）
-        Long knowledgeId = findKnowledgeIdByName(knowledgeName);
-        Long courseId = findCourseIdByKnowledgeId(knowledgeId);
-        
-        if (knowledgeId == null) {
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("error", "未找到知识点: " + knowledgeName);
-            return errorResponse;
-        }
-        
-        Map<String, Object> response = askQuestion(studentId, question, courseId);
-        response.put("knowledgeId", knowledgeId);
-        response.put("knowledgeName", knowledgeName);
-        
-        return response;
-    }
-    
-    @Override
-    public Map<String, Object> generateExercise(Long studentId, Long courseId, List<Long> knowledgeIds, 
-                                              String difficultyLevel, Integer questionCount) {
-        if (studentId == null || courseId == null || questionCount == null || questionCount <= 0) {
-            return new HashMap<>();
-        }
-        
-        // 实际实现中，应该根据学生的学习进度、知识点掌握情况和难度要求生成个性化题目
-        // 这里简化实现，返回模拟数据
-        Map<String, Object> exercise = new HashMap<>();
-        String exerciseId = generateExerciseId();
-        
-        exercise.put("exerciseId", exerciseId);
-        exercise.put("studentId", studentId);
-        exercise.put("courseId", courseId);
-        exercise.put("difficultyLevel", StringUtils.hasText(difficultyLevel) ? difficultyLevel : "medium");
-        exercise.put("generatedAt", LocalDateTime.now());
-        
-        // 知识点信息
-        if (knowledgeIds != null && !knowledgeIds.isEmpty()) {
-            exercise.put("knowledgeIds", knowledgeIds);
-            // 实际实现中应该查询知识点名称
-        }
-        
-        // 生成题目
-        List<Map<String, Object>> questions = generateSampleQuestions(questionCount);
-        exercise.put("questions", questions);
-        exercise.put("questionCount", questions.size());
-        
-        return exercise;
-    }
-    
-    @Override
+
+
+
+
+
+    /*@Override
     public Map<String, Object> generateExerciseByCourseName(Long studentId, String courseName, 
                                                           String difficultyLevel, Integer questionCount) {
         if (studentId == null || !StringUtils.hasText(courseName) || questionCount == null || questionCount <= 0) {
@@ -209,7 +343,7 @@ public class StudentAssistantServiceImpl implements StudentAssistantService {
         exercise.put("weakPoints", weakPoints);
         
         return exercise;
-    }
+    }*/
     
     @Override
     public Map<String, Object> submitExerciseAnswers(Long studentId, String exerciseId, Map<String, String> answers) {

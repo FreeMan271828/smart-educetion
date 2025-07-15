@@ -1,5 +1,7 @@
 package org.nuist.service;
 
+import reactor.core.publisher.Flux;
+
 import java.util.List;
 import java.util.Map;
 
@@ -16,74 +18,64 @@ public interface StudentAssistantService {
      * @return 问答结果
      */
     Map<String, Object> askQuestion(Long studentId, String question, Long courseId);
-    
-    /**
-     * 基于课程名称的智能问答
-     * @param studentId 学生ID
-     * @param question 问题内容
-     * @param courseName 课程名称
-     * @return 问答结果
-     */
-    Map<String, Object> askQuestionByCourseName(Long studentId, String question, String courseName);
-    
-    /**
-     * 关联知识点的智能问答
-     * @param studentId 学生ID
-     * @param question 问题内容
-     * @param knowledgeName 知识点名称
-     * @return 问答结果
-     */
-    Map<String, Object> askQuestionByKnowledgeName(Long studentId, String question, String knowledgeName);
-    
-    /**
-     * 生成个性化练习
-     * @param studentId 学生ID
-     * @param courseId 课程ID
-     * @param knowledgeIds 知识点ID列表(可选)
-     * @param difficultyLevel 难度级别(可选)
-     * @param questionCount 题目数量
-     * @return 练习内容
-     */
-    Map<String, Object> generateExercise(Long studentId, Long courseId, List<Long> knowledgeIds, 
-                                        String difficultyLevel, Integer questionCount);
-    
-    /**
+
+    Map<String, Object> generateExerciseByCourseName(Long studentId, String courseName,
+                                                     String difficultyLevel,
+                                                     Integer questionCount);
+
+
+    Map<String, Object> generateExerciseByKnowledgeNames(Long studentId,
+                                                         List<String> knowledgeNames,
+                                                         String difficultyLevel,
+                                                         Integer questionCount);
+
+
+
+    Flux<String> generateExerciseStream(Long studentId, Long courseId,
+                                        List<Long> knowledgeIds,
+                                        String difficultyLevel,
+                                        Integer questionCount);
+
+    /*
+    *//**
      * 基于课程名称生成练习
      * @param studentId 学生ID
      * @param courseName 课程名称
      * @param difficultyLevel 难度级别(可选)
      * @param questionCount 题目数量
      * @return 练习内容
-     */
-    Map<String, Object> generateExerciseByCourseName(Long studentId, String courseName, 
+     *//*
+    Map<String, Object> generateExerciseByCourseName(Long studentId, String courseName,
                                                    String difficultyLevel, Integer questionCount);
-    
-    /**
+
+    *//**
      * 基于知识点名称生成练习
      * @param studentId 学生ID
      * @param knowledgeNames 知识点名称列表
      * @param difficultyLevel 难度级别(可选)
      * @param questionCount 题目数量
      * @return 练习内容
-     */
-    Map<String, Object> generateExerciseByKnowledgeNames(Long studentId, List<String> knowledgeNames, 
+     *//*
+    Map<String, Object> generateExerciseByKnowledgeNames(Long studentId, List<String> knowledgeNames,
                                                        String difficultyLevel, Integer questionCount);
-    
-    /**
+
+    *//**
      * 生成薄弱知识点练习
      * @param studentId 学生ID
      * @param questionCount 题目数量
      * @return 练习内容
-     */
+     *//*
     Map<String, Object> generateWeakPointsExercise(Long studentId, Integer questionCount);
-    
-    /**
+
+    *//**
      * 提交练习答案
      * @param studentId 学生ID
      * @param exerciseId 练习ID
      * @param answers 答案内容
      * @return 练习评测结果
      */
+
+
     Map<String, Object> submitExerciseAnswers(Long studentId, String exerciseId, Map<String, String> answers);
     
     /**

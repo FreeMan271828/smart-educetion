@@ -51,7 +51,11 @@
             <version>1.18.30</version>
             <!--				<optional>true</optional>-->
         </dependency>
-
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.6.0</version> <!-- 推荐使用最新版本 -->
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webflux</artifactId>
@@ -60,6 +64,11 @@
             <groupId>org.nuist</groupId>
             <artifactId>auth</artifactId>
             <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 
