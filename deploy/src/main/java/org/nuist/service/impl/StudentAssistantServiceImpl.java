@@ -2,6 +2,7 @@ package org.nuist.service.impl;
 
 import org.nuist.bo.CourseBO;
 import org.nuist.bo.KnowledgeBO;
+import org.nuist.dto.Message;
 import org.nuist.service.CourseService;
 import org.nuist.service.KnowledgeService;
 import org.nuist.service.StudentAssistantService;
@@ -10,7 +11,6 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Flux;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -34,6 +34,9 @@ public class StudentAssistantServiceImpl implements StudentAssistantService {
     public StudentAssistantServiceImpl(WebClient webClient) {
         this.webClient = webClient; // 正确注入WebClient
     }
+
+
+
 
     private Map<String, Object> createRequestBody(String question) {
         return Collections.singletonMap(
@@ -68,6 +71,29 @@ public class StudentAssistantServiceImpl implements StudentAssistantService {
 
 
     @Override
+    public Map<String, Object> askWithHistory(Long studentId,
+                                              List<Message> messages) {
+        // 1. 构建符合Python接口要求的请求格式
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("messages", messages);
+
+        // 2. 创建类型引用用于解析响应
+        ParameterizedTypeReference<Map<String, Object>> typeRef =
+                new ParameterizedTypeReference<>() {};
+
+        // 3. 调用Python的历史感知问答接口
+        return webClient.post()
+                .uri("/chat") // 调用历史感知接口[3,4](@ref)
+                .bodyValue(requestBody)
+                .retrieve()
+                .bodyToMono(typeRef)
+                .block();
+    }
+
+
+
+
+    @Override
     public Map<String, Object> generateExerciseByCourseName(Long studentId, String courseName,
                                                             String difficultyLevel,
                                                             Integer questionCount) {
@@ -80,7 +106,7 @@ public class StudentAssistantServiceImpl implements StudentAssistantService {
         }
 
         // 2. 构建练习生成提示
-        String prompt = buildExercisePrompt(courseName, difficultyLevel, questionCount);
+        String prompt = buildExercisePromptByCourse(courseName, difficultyLevel, questionCount);
 
         // 3. 创建请求体
         Map<String, Object> requestBody = createRequestBody(prompt);
@@ -96,7 +122,7 @@ public class StudentAssistantServiceImpl implements StudentAssistantService {
     /**
      * 构建练习生成提示
      */
-    private String buildExercisePrompt(String courseName,
+    private String buildExercisePromptByCourse(String courseName,
                                        String difficultyLevel,
                                        Integer questionCount) {
         StringBuilder prompt = new StringBuilder("生成")
@@ -116,7 +142,7 @@ public class StudentAssistantServiceImpl implements StudentAssistantService {
         }
 
         prompt.append("。请按照以下格式返回题目：\n\n");
-        prompt.append("题目: [题目内容]\n");
+        prompt.append("题目[题目序号]: [题目内容]\n");
         prompt.append("如果该题为选择题，则需要在题目与答案之间添加：选项: A.[选项A] B.[选项B] C.[选项C] D.[选项D]\n");
         prompt.append("答案: [正确答案]\n");
         prompt.append("解析: [题目解析]\n\n");
@@ -139,7 +165,7 @@ public class StudentAssistantServiceImpl implements StudentAssistantService {
         }
 
         // 2. 构建练习生成提示
-        String prompt = buildExercisePrompt(knowledgeNames, difficultyLevel, questionCount);
+        String prompt = buildExercisePromptByKnowledge(knowledgeNames, difficultyLevel, questionCount);
 
         // 3. 创建请求体
         Map<String, Object> requestBody = createRequestBody(prompt);
@@ -156,7 +182,7 @@ public class StudentAssistantServiceImpl implements StudentAssistantService {
     /**
      * 构建基于知识点的练习生成提示
      */
-    private String buildExercisePrompt(List<String> knowledgeNames,
+    private String buildExercisePromptByKnowledge(List<String> knowledgeNames,
                                        String difficultyLevel,
                                        Integer questionCount) {
         // 拼接知识点名称
@@ -178,7 +204,7 @@ public class StudentAssistantServiceImpl implements StudentAssistantService {
         }
 
         prompt.append("。请按照以下格式返回题目：\n\n");
-        prompt.append("题目: [题目内容]\n");
+        prompt.append("题目[题目序号]: [题目内容]\n");
         prompt.append("如果该题为选择题，则需要在题目与答案之间添加：选项: A.[选项A] B.[选项B] C.[选项C] D.[选项D]\n");
         prompt.append("答案: [正确答案]\n");
         prompt.append("解析: [题目解析]\n\n");
@@ -189,70 +215,47 @@ public class StudentAssistantServiceImpl implements StudentAssistantService {
 
 
 
-    /**
-     * 流式生成个性化练习
-     */
-    public Flux<String> generateExerciseStream(Long studentId, Long courseId,
-                                               List<Long> knowledgeIds,
-                                               String difficultyLevel,
-                                               Integer questionCount) {
-        // 1. 构建练习生成提示
-        String prompt = buildExercisePrompt(courseId, knowledgeIds, difficultyLevel, questionCount);
-
-        // 2. 调用流式接口生成练习
-        return callExerciseGenerationStream(prompt)
-                .timeout(Duration.ofSeconds(120)); // 设置超时时间
-    }
-
-    /**
-     * 构建练习生成提示
-     */
     private String buildExercisePrompt(Long courseId, List<Long> knowledgeIds,
                                        String difficultyLevel, Integer questionCount) {
         StringBuilder prompt = new StringBuilder("生成")
                 .append(questionCount)
                 .append("道练习题");
 
+        // 动态拼接课程名称
         if (courseId != null) {
             CourseBO course = courseService.getCourseById(courseId);
-            if(course != null) {
-                prompt.append("，课程名称：").append(course.getName());
-            }
+            if (course != null) prompt.append("，课程名称：").append(course.getName());
         }
-        if(knowledgeIds != null && !knowledgeIds.isEmpty()){
-            prompt.append("，知识点：");
-            for(Long knowledgeId : knowledgeIds) {
-                KnowledgeBO knowledge = knowledgeService.getKnowledgeById(knowledgeId);
-                if(knowledge != null) {
-                    prompt.append("1：").append(knowledge.getName());
-                }
 
+        // 修复知识点拼接：使用循环索引动态编号
+        if (knowledgeIds != null && !knowledgeIds.isEmpty()) {
+            prompt.append("，知识点：");
+            int index = 1;
+            for (Long knowledgeId : knowledgeIds) {
+                KnowledgeBO knowledge = knowledgeService.getKnowledgeById(knowledgeId);
+                if (knowledge != null) {
+                    prompt.append(index++).append("：").append(knowledge.getName()).append("；");
+                }
             }
         }
-        if(difficultyLevel!=null){
+
+        // 动态添加难度级别
+        if (difficultyLevel != null) {
             prompt.append("，题目难度：").append(difficultyLevel);
         }
-        prompt.append("。请按照以下格式返回题目：\n\n");
-        prompt.append("题目: [题目内容]\n");
-        prompt.append("选项: A.[选项A] B.[选项B] C.[选项C] D.[选项D]\n");
-        prompt.append("答案: [正确答案]\n");
-        prompt.append("解析: [题目解析]\n\n");
+
+        // 优化题型提示：适配选择题和非选择题
+        prompt.append("""
+        。请按以下格式返回题目：
+        题目: [题目内容]
+        {如果是选择题，添加一行：选项: A.[选项A] B.[选项B] ...}
+        答案: [正确答案]
+        解析: [题目解析]
+        \n
+        """);
 
         return prompt.toString();
     }
-
-    /**
-     * 调用流式练习生成接口
-     */
-    private Flux<String> callExerciseGenerationStream(String prompt) {
-        return webClient.post()
-                .uri("/chat/stream/plain")
-                .bodyValue(createRequestBody(prompt))
-                .retrieve()
-                .bodyToFlux(String.class);
-    }
-
-
 
 
 

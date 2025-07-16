@@ -1,5 +1,7 @@
 package org.nuist.service;
 
+
+import org.nuist.dto.Message;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
@@ -19,6 +21,9 @@ public interface StudentAssistantService {
      */
     Map<String, Object> askQuestion(Long studentId, String question, Long courseId);
 
+    Map<String, Object> askWithHistory(Long studentId,
+                                       List<Message> messages);
+
     Map<String, Object> generateExerciseByCourseName(Long studentId, String courseName,
                                                      String difficultyLevel,
                                                      Integer questionCount);
@@ -31,10 +36,6 @@ public interface StudentAssistantService {
 
 
 
-    Flux<String> generateExerciseStream(Long studentId, Long courseId,
-                                        List<Long> knowledgeIds,
-                                        String difficultyLevel,
-                                        Integer questionCount);
 
     /*
     *//**
@@ -114,4 +115,6 @@ public interface StudentAssistantService {
      * @return 匹配的历史问答记录
      */
     List<Map<String, Object>> searchQuestionHistory(Long studentId, String keywords, Integer limit);
+
+
 } 
