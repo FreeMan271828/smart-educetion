@@ -14,7 +14,6 @@ import java.util.List;
 public class LessonRequestDTO {
     private String subjectType;
     private String courseOutline;
-    private List<String> courseDocuments;
     private Integer duration;
     private String difficultyLevel;
     private String teachingStyle;
