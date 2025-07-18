@@ -204,16 +204,17 @@ public class StudentExamServiceImpl implements StudentExamService {
         if (studentId == null || examId == null) {
             return BigDecimal.ZERO;
         }
-        
+
+        // 改用COALESCE函数（0
         QueryWrapper<StudentExamAnswerPO> queryWrapper = Wrappers.<StudentExamAnswerPO>query()
-                .select("IFNULL(SUM(score), 0) as total_score")
+                .select("COALESCE(SUM(score)::numeric, 0) as total_score")
                 .eq("student_id", studentId)
                 .eq("exam_id", examId);
-                
+
         Map<String, Object> result = studentExamMapper.selectMaps(queryWrapper).get(0);
         return parseTotalScore(result);
     }
-    
+
     @Override
     public Map<Long, BigDecimal> getExamScoreByTitle(Long studentId, String examTitle) {
         if (studentId == null || !StringUtils.hasText(examTitle)) {
