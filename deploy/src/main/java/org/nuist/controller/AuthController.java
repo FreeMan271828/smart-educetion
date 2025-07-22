@@ -1,5 +1,8 @@
 package org.nuist.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import org.nuist.dto.request.AdminChangePasswordDto;
 import org.nuist.dto.request.ChangePasswordDto;
 import org.nuist.dto.request.LoginRequestDto;
 import org.nuist.dto.request.RefreshTokenDto;
@@ -10,8 +13,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.nuist.service.UserService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RequiredArgsConstructor
 @Tag(name = "auth", description = "用户鉴权API")
@@ -50,6 +57,18 @@ public class AuthController {
     @PutMapping("/change-password")
     public ResponseEntity<TokenResponse> changePassword(@RequestBody ChangePasswordDto dto) {
         return ResponseEntity.ok(userService.changePassword(dto.getUsername(), dto.getOldPassword(), dto.getNewPassword()));
+    }
+
+    @PutMapping("/admin-change-password")
+    @PreAuthorize("hasRole('ADMIN')")
+    @SecurityRequirement(name = "BearerAuth")
+    @Operation(summary = "管理员：无验证修改用户密码")
+    public ResponseEntity<Map<String, Object>> adminChangePassword(@RequestBody AdminChangePasswordDto dto) {
+        boolean success = userService.adminChangePassword(dto.getUsername(), dto.getNewPassword());
+        return ResponseEntity.ok(new HashMap<>() {{
+            put("success", success);
+            put("message", success ? "用户密码已更改" : "更改失败，请检查用户名合法性");
+        }});
     }
 
     /**

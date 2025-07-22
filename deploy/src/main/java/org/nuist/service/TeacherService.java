@@ -5,6 +5,8 @@ import org.nuist.dto.AddTeacherDTO;
 import org.nuist.dto.UpdateTeacherDTO;
 import org.nuist.entity.TokenResponse;
 
+import java.util.List;
+
 public interface TeacherService {
 
     /**
@@ -20,6 +22,19 @@ public interface TeacherService {
      * @return 教师业务对象
      */
     TeacherBO getTeacherByUsername(String username);
+
+    /**
+     * 返回全部教师用户
+     * @return 教师列表
+     */
+    List<TeacherBO> getAllTeachers();
+
+    /**
+     * 按照关键词搜索教师用户
+     * @param keyword 关键词
+     * @return 教师列表
+     */
+    List<TeacherBO> searchTeachers(String keyword);
 
     /**
      * 注册教师用户

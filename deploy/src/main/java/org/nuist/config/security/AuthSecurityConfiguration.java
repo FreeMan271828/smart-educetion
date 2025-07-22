@@ -34,6 +34,7 @@ public class AuthSecurityConfiguration {
                 )
                 .securityMatcher("/api/auth/**")
                 .authorizeHttpRequests(req -> req
+                        .requestMatchers("/api/auth/admin-change-password").authenticated()
                         .anyRequest().permitAll()
                 );
 

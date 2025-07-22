@@ -113,6 +113,13 @@ public class StudentController {
         List<StudentBO> students = studentService.searchStudents(keywords, grade, className);
         return ResponseEntity.ok(students);
     }
+
+    @GetMapping("/list")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "管理员：列出所有学生用户")
+    public ResponseEntity<List<StudentBO>> findAllStudents() {
+        return ResponseEntity.ok(studentService.getAllStudents());
+    }
     
     /**
      * 更新学生信息

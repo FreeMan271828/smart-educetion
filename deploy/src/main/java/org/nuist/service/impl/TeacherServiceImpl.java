@@ -18,6 +18,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -51,6 +54,24 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, TeacherPO> im
             return null;
         }
         return TeacherBO.fromTeacherPO(teacher);
+    }
+
+    @Override
+    public List<TeacherBO> getAllTeachers() {
+        return convertList(teacherMapper.selectList(null));
+    }
+
+    @Override
+    public List<TeacherBO> searchTeachers(String keyword) {
+        return convertList(teacherMapper.selectList(Wrappers.<TeacherPO>lambdaQuery()
+                .like(TeacherPO::getUsername, keyword)
+                .or()
+                .like(TeacherPO::getEmail, keyword)
+                .or()
+                .like(TeacherPO::getPhone, keyword)
+                .or()
+                .like(TeacherPO::getFullName, keyword)
+        ));
     }
 
     @Override
@@ -114,5 +135,9 @@ public class TeacherServiceImpl extends ServiceImpl<TeacherMapper, TeacherPO> im
             return false;
         }
         return true;
+    }
+
+    private List<TeacherBO> convertList(List<TeacherPO> teacherPOList) {
+        return teacherPOList.stream().map(TeacherBO::fromTeacherPO).collect(Collectors.toList());
     }
 }

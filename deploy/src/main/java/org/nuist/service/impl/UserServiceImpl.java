@@ -78,6 +78,17 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public boolean adminChangePassword(String username, String newPassword) {
+        User user = userMapper.selectUserWithRoles(username);
+        if (user == null) {
+            return false;
+        }
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userMapper.updateById(user);
+        return true;
+    }
+
+    @Override
     public boolean checkUsername(String username) {
         if (!StringUtils.hasText(username)) {
             throw new IllegalArgumentException("username不可留空");

@@ -24,6 +24,14 @@ public interface UserService extends UserDetailsService {
     TokenResponse changePassword(String username, String oldPassword, String newPassword);
 
     /**
+     * 管理员修改用户密码，无需输入原密码
+     * @param username 用户名
+     * @param newPassword 新密码
+     * @return 操作是否成功
+     */
+    boolean adminChangePassword(String username, String newPassword);
+
+    /**
      * 检查用户名是否可用
      * @param username 目标用户名
      * @return true - 用户名可用；false - 用户名不可用

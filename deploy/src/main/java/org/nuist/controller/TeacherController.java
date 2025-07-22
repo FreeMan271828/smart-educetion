@@ -16,6 +16,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -41,6 +42,18 @@ public class TeacherController {
     @GetMapping("/username/{username}")
     public ResponseEntity<TeacherBO> getTeacherByUsername(@PathVariable String username) {
         return ResponseEntity.ok(teacherService.getTeacherByUsername(username));
+    }
+
+    @GetMapping("/list")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "管理员：列出所有教师用户")
+    public ResponseEntity<List<TeacherBO>> getAllTeachers() {
+        return ResponseEntity.ok(teacherService.getAllTeachers());
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<TeacherBO>> searchTeachers(@RequestParam String keyword) {
+        return ResponseEntity.ok(teacherService.searchTeachers(keyword));
     }
 
     @PostMapping("/register")

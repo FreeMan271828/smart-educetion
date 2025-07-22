@@ -108,6 +108,11 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
+    public List<StudentBO> getAllStudents() {
+        return convertToBOList(studentMapper.selectList(null));
+    }
+
+    @Override
     public TokenResponse registerStudent(StudentBO studentBO) {
         StudentPO studentPO = new StudentPO();
         studentPO.setUsername(studentBO.getUsername());

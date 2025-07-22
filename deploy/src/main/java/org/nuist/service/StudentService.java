@@ -37,6 +37,12 @@ public interface StudentService {
      * @return 学生列表
      */
     List<StudentBO> getStudentsByFullName(String fullName);
+
+    /**
+     * 获取全部学生用户信息
+     * @return 学生列表
+     */
+    List<StudentBO> getAllStudents();
     
     /**
      * 保存或更新学生信息
