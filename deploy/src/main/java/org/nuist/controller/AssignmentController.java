@@ -1,5 +1,6 @@
 package org.nuist.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.nuist.bo.AssignmentBO;
@@ -63,5 +64,20 @@ public class AssignmentController {
             put("success", result);
             put("message", result ? "作业删除成功" : "作业删除失败");
         }});
+    }
+
+
+    @Operation(summary = "根据学生id获取该学生已选课程中还未完成的作业")
+    @GetMapping("/incomplete/student/{studentId}")
+    public ResponseEntity<List<AssignmentBO>> getAssignmentsByStudentId(@PathVariable Long studentId) {
+        return ResponseEntity.ok(assignmentService.getIncompleteAssignments(studentId));
+    }
+
+
+
+    @GetMapping("/incomplete-student/course/{courseId}/assignment/{assignmentId}")
+    @Operation(summary = "获取课程下还未完成指定作业的学生Id")
+    public ResponseEntity<List<Long>> getIncompleteStudentsByCourseIdAndAssignmentId(@PathVariable Long courseId, @PathVariable Long assignmentId) {
+        return ResponseEntity.ok(assignmentService.getIncompleteStudentsByCourseIdAndAssignmentId(courseId, assignmentId));
     }
 }

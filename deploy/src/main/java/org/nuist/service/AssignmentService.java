@@ -20,4 +20,8 @@ public interface AssignmentService {
     List<AssignmentBO> getAssignmentsInCourseByCreatorId(Long creatorId);
 
     List<AssignmentBO> getAssignmentsInCourseByCreatorIdAndType(Long creatorId, String type);
+
+    List<AssignmentBO> getIncompleteAssignments(Long studentId);
+
+    List<Long> getIncompleteStudentsByCourseIdAndAssignmentId(Long courseId, Long assignmentId);
 }
