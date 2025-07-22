@@ -3,6 +3,7 @@ package org.nuist.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.nuist.aop.ActivityStat;
 import org.nuist.bo.AssignmentBO;
 import org.nuist.service.AssignmentService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,16 +48,19 @@ public class AssignmentController {
         return ResponseEntity.ok(assignmentService.getAssignmentsInCourseByCreatorIdCourseId(courseId, creatorId));
     }
 
+    @ActivityStat(module ="作业管理", userType = ActivityStat.UserType.TEACHER, statTypes = ActivityStat.StatType.DAILY)
     @PostMapping("/save")
     public ResponseEntity<AssignmentBO> saveAssignment(@RequestBody AssignmentBO assignmentBO) {
         return ResponseEntity.ok(assignmentService.saveAssignment(assignmentBO));
     }
 
+    @ActivityStat(module ="作业管理", userType = ActivityStat.UserType.TEACHER, statTypes = ActivityStat.StatType.DAILY)
     @PostMapping("/update")
     public ResponseEntity<AssignmentBO> updateAssignment(@RequestBody AssignmentBO assignmentBO) {
         return ResponseEntity.ok(assignmentService.updateAssignment(assignmentBO));
     }
 
+    @ActivityStat(module ="作业管理", userType = ActivityStat.UserType.TEACHER, statTypes = ActivityStat.StatType.DAILY)
     @DeleteMapping("/delete")
     public ResponseEntity<HashMap<Object, Object>> deleteAssignment(@RequestBody Long assignmentId) {
         boolean result = assignmentService.deleteAssignment(assignmentId);
@@ -67,6 +71,7 @@ public class AssignmentController {
     }
 
 
+    @ActivityStat(module ="作业管理", userType = ActivityStat.UserType.TEACHER, statTypes = ActivityStat.StatType.DAILY)
     @Operation(summary = "根据学生id获取该学生已选课程中还未完成的作业")
     @GetMapping("/incomplete/student/{studentId}")
     public ResponseEntity<List<AssignmentBO>> getAssignmentsByStudentId(@PathVariable Long studentId) {
@@ -75,6 +80,7 @@ public class AssignmentController {
 
 
 
+    @ActivityStat(module ="作业管理", userType = ActivityStat.UserType.TEACHER, statTypes = ActivityStat.StatType.DAILY)
     @GetMapping("/incomplete-student/course/{courseId}/assignment/{assignmentId}")
     @Operation(summary = "获取课程下还未完成指定作业的学生Id")
     public ResponseEntity<List<Long>> getIncompleteStudentsByCourseIdAndAssignmentId(@PathVariable Long courseId, @PathVariable Long assignmentId) {

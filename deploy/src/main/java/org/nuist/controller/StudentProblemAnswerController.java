@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.apiguardian.api.API;
+import org.nuist.aop.ActivityStat;
 import org.nuist.bo.ProblemBO;
 import org.nuist.bo.StudentProblemAnswerBO;
 import org.nuist.constant.ProblemType;
@@ -50,6 +51,7 @@ public class StudentProblemAnswerController {
     }
 
     // 3. 作答对应题目
+    @ActivityStat(module = "作业管理", userType = ActivityStat.UserType.STUDENT, statTypes = ActivityStat.StatType.DAILY)
     @PostMapping("/submit")
     public ResponseEntity<StudentProblemAnswerBO> submitAnswer(
             @RequestParam Long studentId,
@@ -112,6 +114,7 @@ public class StudentProblemAnswerController {
     }
 
     // 4. 批改对应题目答案
+    @ActivityStat(module = "作业管理", userType = ActivityStat.UserType.TEACHER, statTypes = ActivityStat.StatType.DAILY)
     @PostMapping("/grade")
     public ResponseEntity<StudentProblemAnswerBO> gradeAnswer(
             @RequestParam Long answerId,
@@ -121,7 +124,7 @@ public class StudentProblemAnswerController {
     }
 
     // 5. 查询完成率
-
+    @ActivityStat(module = "作业管理", userType = ActivityStat.UserType.TEACHER, statTypes = ActivityStat.StatType.DAILY)
     @GetMapping("/completion-rate")
     public ResponseEntity<Map<String, Object>> getCompletionRate(
             @RequestParam Long studentId,
@@ -131,7 +134,7 @@ public class StudentProblemAnswerController {
     }
 
     // 6. 查询正确率
-
+    @ActivityStat(module = "作业管理", userType = ActivityStat.UserType.TEACHER, statTypes = ActivityStat.StatType.DAILY)
     @GetMapping("/accuracy-rate")
     public ResponseEntity<Map<String, Object>> getAccuracyRate(
             @RequestParam Long studentId,

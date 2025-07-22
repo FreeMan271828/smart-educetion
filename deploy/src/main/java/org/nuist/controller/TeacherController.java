@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.nuist.aop.ActivityStat;
 import org.nuist.bo.TeacherBO;
 import org.nuist.dto.AddTeacherDTO;
 import org.nuist.dto.UpdateTeacherDTO;
@@ -56,16 +57,19 @@ public class TeacherController {
         return ResponseEntity.ok(teacherService.searchTeachers(keyword));
     }
 
+    @ActivityStat(module = "教师信息管理", userType = ActivityStat.UserType.TEACHER, statTypes = ActivityStat.StatType.DAILY)
     @PostMapping("/register")
     public ResponseEntity<TokenResponse> saveTeacher(@RequestBody AddTeacherDTO addTeacherDTO) {
         return ResponseEntity.ok(teacherService.saveTeacher(addTeacherDTO));
     }
 
+    @ActivityStat(module = "教师信息管理", userType = ActivityStat.UserType.TEACHER, statTypes = ActivityStat.StatType.DAILY)
     @PutMapping("/update")
     public ResponseEntity<TeacherBO> updateTeacher(@RequestBody UpdateTeacherDTO updateTeacherDTO) {
         return ResponseEntity.ok(teacherService.updateTeacher(updateTeacherDTO));
     }
 
+    @ActivityStat(module = "教师信息管理", userType = ActivityStat.UserType.TEACHER, statTypes = ActivityStat.StatType.DAILY)
     @Operation(summary = "更改教师用户名", description = "进行该操作前，请先提前使用/auth/check-available-username检查可用用户名")
     @PutMapping("/{id}/change-username/{username}")
     public ResponseEntity<Map<String, Object>> changeTeacherUsername(

@@ -3,6 +3,7 @@ package org.nuist.controller;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.nuist.aop.ActivityStat;
 import org.nuist.bo.ExamBO;
 import org.nuist.service.ExamService;
 import org.springframework.http.ResponseEntity;
@@ -52,18 +53,21 @@ public class ExamController{
         return ResponseEntity.ok(examService.getExamsInCourseByType(courseId, type));
     }
 
+    @ActivityStat(module = "考试管理", userType = ActivityStat.UserType.TEACHER, statTypes = ActivityStat.StatType.DAILY)
     @PostMapping("/save")
     
     public ResponseEntity<ExamBO> saveExam(@RequestBody ExamBO examBo) {
         return ResponseEntity.ok(examService.saveExam(examBo));
     }
 
+    @ActivityStat(module = "考试管理", userType = ActivityStat.UserType.TEACHER, statTypes = ActivityStat.StatType.DAILY)
     @PutMapping("/update")
     
     public ResponseEntity<ExamBO> updateExam(@RequestBody ExamBO examBo) {
         return ResponseEntity.ok(examService.updateExam(examBo));
     }
 
+    @ActivityStat(module = "考试管理", userType = ActivityStat.UserType.TEACHER, statTypes = ActivityStat.StatType.DAILY)
     @DeleteMapping("/{id}")
     
     public ResponseEntity<Map<String, Object>> deleteExam(@PathVariable Long id) {

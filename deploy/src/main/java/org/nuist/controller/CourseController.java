@@ -2,6 +2,7 @@ package org.nuist.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import org.nuist.aop.ActivityStat;
 import org.nuist.bo.CourseBO;
 import org.nuist.service.CourseService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -111,6 +112,7 @@ public class CourseController {
      * @param course 课程信息
      * @return 保存结果
      */
+    @ActivityStat(module = "课程管理", userType = ActivityStat.UserType.TEACHER, statTypes = ActivityStat.StatType.DAILY)
     @PostMapping("/save")
     public ResponseEntity<Map<String, Object>> saveOrUpdateCourse(@RequestBody CourseBO course) {
         Long courseId = courseService.saveOrUpdateCourse(course);
@@ -133,6 +135,7 @@ public class CourseController {
      * @param courseId 课程ID
      * @return 删除结果
      */
+    @ActivityStat(module = "课程管理", userType = ActivityStat.UserType.TEACHER, statTypes = ActivityStat.StatType.DAILY)
     @DeleteMapping("/{courseId}")
     public ResponseEntity<Map<String, Object>> deleteCourse(@PathVariable("courseId") Long courseId) {
         boolean success = courseService.deleteCourse(courseId);
@@ -148,6 +151,7 @@ public class CourseController {
      * @param courseIds 课程ID列表
      * @return 删除结果
      */
+    @ActivityStat(module = "课程管理", userType = ActivityStat.UserType.TEACHER, statTypes = ActivityStat.StatType.DAILY)
     @DeleteMapping("/batch")
     public ResponseEntity<Map<String, Object>> batchDeleteCourses(@RequestBody List<Long> courseIds) {
         int count = courseService.batchDeleteCourses(courseIds);

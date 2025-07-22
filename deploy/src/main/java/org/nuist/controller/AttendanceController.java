@@ -2,6 +2,7 @@ package org.nuist.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import org.nuist.aop.ActivityStat;
 import org.nuist.bo.AttendanceBO;
 import org.nuist.service.AttendanceService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -104,6 +105,7 @@ public class AttendanceController {
      * @param attendance 考勤记录
      * @return 保存结果
      */
+    @ActivityStat(module = "考勤管理", userType = ActivityStat.UserType.STUDENT, statTypes = ActivityStat.StatType.DAILY)
     @PostMapping("/save")
     public ResponseEntity<Map<String, Object>> saveAttendance(@RequestBody AttendanceBO attendance) {
         Long attendanceId = attendanceService.saveAttendance(attendance);
@@ -120,12 +122,14 @@ public class AttendanceController {
             return ResponseEntity.badRequest().body(result);
         }
     }
-    
+
+
     /**
      * 批量保存考勤记录
      * @param attendanceList 考勤记录列表
      * @return 保存结果
      */
+    @ActivityStat(module = "考勤管理", userType = ActivityStat.UserType.STUDENT, statTypes = ActivityStat.StatType.DAILY)
     @PostMapping("/batch-save")
     public ResponseEntity<Map<String, Object>> batchSaveAttendance(@RequestBody List<AttendanceBO> attendanceList) {
         int count = attendanceService.batchSaveAttendance(attendanceList);
@@ -144,6 +148,7 @@ public class AttendanceController {
      * @param remark 备注
      * @return 更新结果
      */
+    @ActivityStat(module = "考勤管理", userType = ActivityStat.UserType.STUDENT, statTypes = ActivityStat.StatType.DAILY)
     @PutMapping("/{attendanceId}/status")
     public ResponseEntity<Map<String, Object>> updateAttendanceStatus(
             @PathVariable("attendanceId") Long attendanceId,
@@ -166,6 +171,7 @@ public class AttendanceController {
      * @param remark 备注
      * @return 更新结果
      */
+    @ActivityStat(module = "考勤管理", userType = ActivityStat.UserType.STUDENT, statTypes = ActivityStat.StatType.DAILY)
     @PutMapping("/student/{studentId}/course/update")
     public ResponseEntity<Map<String, Object>> updateAttendanceByCourseName(
             @PathVariable("studentId") Long studentId,
@@ -241,6 +247,7 @@ public class AttendanceController {
         return ResponseEntity.ok(attendanceList);
     }
 
+    @ActivityStat(module = "考勤管理", userType = ActivityStat.UserType.STUDENT, statTypes = ActivityStat.StatType.DAILY)
     @Operation(summary = "根据考勤ID删除考勤实体")
     @DeleteMapping("/{attendanceId}")
     public ResponseEntity<Map<String, Object>> deleteAttendance(@PathVariable Long attendanceId) {
@@ -251,6 +258,7 @@ public class AttendanceController {
         }});
     }
 
+    @ActivityStat(module = "考勤管理", userType = ActivityStat.UserType.STUDENT, statTypes = ActivityStat.StatType.DAILY)
     @Operation(summary = "批量删除考勤实体")
     @DeleteMapping("/batch")
     public ResponseEntity<Map<String, Object>> batchDeleteAttendance(@RequestBody List<Long> attendanceIds) {

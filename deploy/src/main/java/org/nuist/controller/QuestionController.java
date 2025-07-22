@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.nuist.aop.ActivityStat;
 import org.nuist.bo.QuestionBO;
 import org.nuist.service.QuestionService;
 import org.springframework.http.ResponseEntity;
@@ -72,18 +73,21 @@ public class QuestionController {
         return ResponseEntity.ok(questionService.getQuestionsInExam(examId));
     }
 
+    @ActivityStat(module = "考试题目管理", userType = ActivityStat.UserType.TEACHER, statTypes = ActivityStat.StatType.DAILY)
     @PostMapping("/save")
     @Operation(summary = "保存一个问题", description = "目前，所有问题应当与考试关联（通过examId），考试再与知识点关联")
     public ResponseEntity<QuestionBO> saveQuestion(@RequestBody QuestionBO questionBO) {
         return ResponseEntity.ok(questionService.saveQuestion(questionBO));
     }
 
+    @ActivityStat(module = "考试题目管理", userType = ActivityStat.UserType.TEACHER, statTypes = ActivityStat.StatType.DAILY)
     @PutMapping("/update")
     
     public ResponseEntity<QuestionBO> updateQuestion(@RequestBody QuestionBO questionBO) {
         return ResponseEntity.ok(questionService.updateQuestion(questionBO));
     }
 
+    @ActivityStat(module = "考试题目管理", userType = ActivityStat.UserType.TEACHER, statTypes = ActivityStat.StatType.DAILY)
     @DeleteMapping("/{id}")
     
     public ResponseEntity<Map<String, Object>> deleteQuestion(@PathVariable Long id) {

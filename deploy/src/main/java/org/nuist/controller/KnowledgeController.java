@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
+import org.nuist.aop.ActivityStat;
 import org.nuist.bo.KnowledgeBO;
 import org.nuist.dto.ResortKnowledgeDTO;
 import org.nuist.service.KnowledgeService;
@@ -53,12 +54,14 @@ public class KnowledgeController {
         return ResponseEntity.ok(knowledgeService.searchKnowledge(keyword));
     }
 
+    @ActivityStat(module = "知识点管理", userType = ActivityStat.UserType.TEACHER , statTypes = ActivityStat.StatType.DAILY)
     @Operation(summary = "持久化一个知识点", description = "仅保存知识点信息，此操作不会将其与任何课程建立关联")
     @PostMapping("/save")
     public ResponseEntity<KnowledgeBO> saveKnowledge(@RequestBody AddKnowledgeDTO addKnowledgeDTO) {
         return ResponseEntity.ok(knowledgeService.saveKnowledge(addKnowledgeDTO));
     }
 
+    @ActivityStat(module = "知识点管理", userType = ActivityStat.UserType.TEACHER , statTypes = ActivityStat.StatType.DAILY)
     @Operation(summary = "添加已有知识点到课程", description = "该操作会直接复用已有的知识点，使得多个课程引用同一个知识点对象。该操作不会检验传入ID的正确性")
     @PostMapping("/{knowledgeId}/append/course/{courseId}")
     public ResponseEntity<Map<String, Object>> appendKnowledgeToCourse(@PathVariable Long knowledgeId, @PathVariable Long courseId) {
@@ -69,17 +72,20 @@ public class KnowledgeController {
         }});
     }
 
+    @ActivityStat(module = "知识点管理", userType = ActivityStat.UserType.TEACHER , statTypes = ActivityStat.StatType.DAILY)
     @Operation(summary = "复制并添加已有知识点到课程", description = "复制后的知识点为全新实体，仅与原知识点内容相同。该操作会检验传入knowledgeId的正确性")
     @PostMapping("/{knowledgeId}/copy/course/{courseId}")
     public ResponseEntity<KnowledgeBO> copyKnowledgeToCourse(@PathVariable Long knowledgeId, @PathVariable Long courseId) {
         return ResponseEntity.ok(knowledgeService.copyKnowledgeToCourse(courseId, knowledgeId));
     }
 
+    @ActivityStat(module = "知识点管理", userType = ActivityStat.UserType.TEACHER , statTypes = ActivityStat.StatType.DAILY)
     @PutMapping("/update")
     public ResponseEntity<KnowledgeBO> updateKnowledge(@RequestBody UpdateKnowledgeDTO updateKnowledgeDTO) {
         return ResponseEntity.ok(knowledgeService.updateKnowledge(updateKnowledgeDTO));
     }
 
+    @ActivityStat(module = "知识点管理", userType = ActivityStat.UserType.TEACHER , statTypes = ActivityStat.StatType.DAILY)
     @Operation(summary = "调整课程中单个知识点的位置", description = "将指定课程中的指定知识点移动到指定位置（位置计数从1开始）")
     @PutMapping("/resort-knowledge")
     public ResponseEntity<Map<String, Object>> resortKnowledgeInCourse(@RequestBody ResortKnowledgeDTO resortKnowledgeDTO) {
@@ -94,6 +100,7 @@ public class KnowledgeController {
         }});
     }
 
+    @ActivityStat(module = "知识点管理", userType = ActivityStat.UserType.TEACHER , statTypes = ActivityStat.StatType.DAILY)
     @Operation(summary = "从课程中移除一条知识点", description = "此操作仅会移除关联关系，不会删除知识点实体")
     @DeleteMapping("/course/{courseId}/knowledge/{id}")
     public ResponseEntity<Map<String, Object>> deleteKnowledgeInCourse(@PathVariable Long courseId, @PathVariable Long id) {
@@ -104,6 +111,7 @@ public class KnowledgeController {
         return ResponseEntity.ok(resp);
     }
 
+    @ActivityStat(module = "知识点管理", userType = ActivityStat.UserType.TEACHER , statTypes = ActivityStat.StatType.DAILY)
     @Operation(summary = "从课程中移除一批知识点", description = "此操作仅会移除关联关系，不会删除知识点实体")
     @DeleteMapping("/course/{courseId}/batch")
     public ResponseEntity<Map<String, Object>> deleteKnowledgeInCourseBatch(
@@ -117,6 +125,7 @@ public class KnowledgeController {
         }});
     }
 
+    @ActivityStat(module = "知识点管理", userType = ActivityStat.UserType.TEACHER , statTypes = ActivityStat.StatType.DAILY)
     @Operation(summary = "移除知识点持久化")
     @DeleteMapping("/{knowledgeId}")
     public ResponseEntity<Map<String, Object>> deleteKnowledgeById(@PathVariable Long knowledgeId) {
@@ -127,6 +136,7 @@ public class KnowledgeController {
         }});
     }
 
+    @ActivityStat(module = "知识点管理", userType = ActivityStat.UserType.TEACHER , statTypes = ActivityStat.StatType.DAILY)
     @Operation(summary = "批量移除知识点持久化")
     @DeleteMapping("/batch")
     public ResponseEntity<Map<String, Object>> deleteKnowledgeBatch(@RequestBody List<Long> ids) {

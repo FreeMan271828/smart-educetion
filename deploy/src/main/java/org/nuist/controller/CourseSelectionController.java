@@ -4,6 +4,7 @@ package org.nuist.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.nuist.aop.ActivityStat;
 import org.nuist.bo.CourseBO;
 import org.nuist.bo.StudentBO;
 import org.nuist.service.CourseSelectionService;
@@ -94,6 +95,7 @@ public class CourseSelectionController {
      * @param courseId  课程ID
      * @return
      */
+    @ActivityStat(module = "选课管理", userType = ActivityStat.UserType.STUDENT, statTypes = ActivityStat.StatType.DAILY)
     @DeleteMapping("/batch/student/{studentId}/course/{courseId}")
     public ResponseEntity<Map<String,Object>> deleteCourseSelection(@PathVariable("studentId") Long studentId,
                                                                     @PathVariable("courseId") Long courseId) {
@@ -127,6 +129,7 @@ public class CourseSelectionController {
      * @param courseId
      * @return
      */
+    @ActivityStat(module = "选课管理", userType = ActivityStat.UserType.TEACHER, statTypes = ActivityStat.StatType.DAILY)
     @DeleteMapping("/batch/course/{courseId}")
     public ResponseEntity<Map<String,Object>> deleteAllCourseSelection(@PathVariable("courseId") Long courseId) {
         if(courseSelectionService.DeleteAllCourseSelection(courseId)) {
@@ -145,6 +148,7 @@ public class CourseSelectionController {
      * @param courseId 课程ID
      * @return 生成的邀请码和相关信息
      */
+    @ActivityStat(module = "选课管理", userType = ActivityStat.UserType.TEACHER, statTypes = ActivityStat.StatType.DAILY)
     @PostMapping("/generate-invite-code")
     @Operation(summary = "生成邀请码")
     public ResponseEntity<Map<String, Object>> generateInviteCode(@RequestParam String courseId) {
@@ -176,6 +180,7 @@ public class CourseSelectionController {
      * @param inviteCode 邀请码
      * @return 加入课程结果
      */
+    @ActivityStat(module = "选课管理", userType = ActivityStat.UserType.STUDENT, statTypes = ActivityStat.StatType.DAILY)
     @PostMapping("/join-by-invite-code")
     @Operation(summary = "根据邀请码加入课程")
     public ResponseEntity<Map<String, Object>> joinCourseByInviteCode(

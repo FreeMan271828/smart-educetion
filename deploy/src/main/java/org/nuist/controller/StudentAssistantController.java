@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.apiguardian.api.API;
+import org.nuist.aop.ActivityStat;
 import org.nuist.config.WebClientConfig;
 import org.nuist.dto.ChatHistoryRequest;
 import org.nuist.service.StudentAssistantService;
@@ -54,6 +55,7 @@ public class StudentAssistantController {
      * @param courseId 相关课程ID(可选)
      * @return 问答结果
      */
+    @ActivityStat(module = "ai问答", userType = ActivityStat.UserType.STUDENT, statTypes = ActivityStat.StatType.DAILY)
     @Operation(summary = "无历史非流式一次性问答")
     @PostMapping("/student/{studentId}/ask")
     public ResponseEntity<Map<String, Object>> askQuestion(
@@ -72,6 +74,7 @@ public class StudentAssistantController {
      * @param request 包含历史消息和当前问题的请求体
      * @return 问答结果
      */
+    @ActivityStat(module = "ai问答", userType = ActivityStat.UserType.STUDENT, statTypes = ActivityStat.StatType.DAILY)
     @Operation(summary = "带历史非流式问答")
     @PostMapping("/student/{studentId}/ask/history")
     public ResponseEntity<Map<String, Object>> askQuestionWithHistory(
@@ -100,6 +103,7 @@ public class StudentAssistantController {
      * @param request 包含历史消息的请求体
      * @return SSE流式响应
      */
+    @ActivityStat(module = "ai问答", userType = ActivityStat.UserType.STUDENT, statTypes = ActivityStat.StatType.DAILY)
     @Operation(summary = "带历史流式问答")
     @PostMapping(value = "/stream/chat-history",
             consumes = MediaType.APPLICATION_JSON_VALUE,
@@ -192,6 +196,7 @@ public class StudentAssistantController {
      * @param questionCount 题目数量
      * @return 练习内容
      */
+    @ActivityStat(module = "ai练习", userType = ActivityStat.UserType.STUDENT, statTypes = ActivityStat.StatType.DAILY)
     @Operation(summary = "基于课程名称生成练习")
     @GetMapping("/student/{studentId}/generate-exercise/by-course")
     public ResponseEntity<Map<String, Object>> generateExerciseByCourseName(
@@ -212,6 +217,7 @@ public class StudentAssistantController {
      * @param questionCount 题目数量
      * @return 练习内容
      */
+    @ActivityStat(module = "ai练习", userType = ActivityStat.UserType.STUDENT, statTypes = ActivityStat.StatType.DAILY)
     @Operation(summary = "基于知识点名称生成练习")
     @GetMapping("/student/{studentId}/generate-exercise/by-knowledge")
     public ResponseEntity<Map<String, Object>> generateExerciseByKnowledgeNames(

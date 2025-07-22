@@ -2,6 +2,7 @@ package org.nuist.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import org.nuist.aop.ActivityStat;
 import org.nuist.bo.StudentExamAnswerBO;
 import org.nuist.service.StudentExamService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -116,6 +117,7 @@ public class StudentExamController  {
      * @param answer 答案
      * @return 提交结果
      */
+    @ActivityStat(module = "考试管理", userType = ActivityStat.UserType.STUDENT, statTypes = ActivityStat.StatType.DAILY)
     @PostMapping("/submit")
     
     public ResponseEntity<Map<String, Object>> submitAnswer(@RequestBody StudentExamAnswerBO answer) {
@@ -139,6 +141,7 @@ public class StudentExamController  {
      * @param answers 答案列表
      * @return 提交结果
      */
+    @ActivityStat(module = "考试管理", userType = ActivityStat.UserType.STUDENT, statTypes = ActivityStat.StatType.DAILY)
     @PostMapping("/batch-submit")
     
     public ResponseEntity<Map<String, Object>> batchSubmitAnswers(@RequestBody List<StudentExamAnswerBO> answers) {

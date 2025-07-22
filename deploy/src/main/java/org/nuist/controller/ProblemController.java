@@ -2,6 +2,7 @@ package org.nuist.controller;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.nuist.aop.ActivityStat;
 import org.nuist.bo.ProblemBO;
 import org.nuist.service.ProblemService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,16 +44,19 @@ public class ProblemController {
         return ResponseEntity.ok(problemService.getProblemsByType(type));
     }
 
+    @ActivityStat(module = "作业题目管理", userType = ActivityStat.UserType.TEACHER, statTypes = ActivityStat.StatType.DAILY)
     @PostMapping("/save")
     public ResponseEntity<ProblemBO> saveProblem(@RequestBody ProblemBO problemBO) {
         return ResponseEntity.ok(problemService.saveProblem(problemBO));
     }
 
+    @ActivityStat(module = "作业题目管理", userType = ActivityStat.UserType.TEACHER, statTypes = ActivityStat.StatType.DAILY)
     @PostMapping("/update")
     public ResponseEntity<ProblemBO> updateProblem(@RequestBody ProblemBO problemBO) {
         return ResponseEntity.ok(problemService.updateProblem(problemBO));
     }
 
+    @ActivityStat(module = "作业题目管理", userType = ActivityStat.UserType.TEACHER, statTypes = ActivityStat.StatType.DAILY)
     @DeleteMapping("/delete")
     public ResponseEntity<HashMap<Object, Object>> deleteProblem(@RequestBody Long problemId) {
         boolean result = problemService.deleteProblem(problemId);

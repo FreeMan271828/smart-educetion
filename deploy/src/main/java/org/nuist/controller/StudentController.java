@@ -2,6 +2,7 @@ package org.nuist.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import org.nuist.aop.ActivityStat;
 import org.nuist.bo.StudentBO;
 import org.nuist.entity.TokenResponse;
 import org.nuist.service.StudentService;
@@ -126,7 +127,7 @@ public class StudentController {
      * @param student 学生信息
      * @return 保存结果
      */
-    
+    @ActivityStat(module = "学生信息管理", userType = ActivityStat.UserType.STUDENT, statTypes = ActivityStat.StatType.DAILY)
     @PutMapping("/update")
     public ResponseEntity<Map<String, Object>> updateStudent(@RequestBody StudentBO student) {
         Long studentId = studentService.saveOrUpdateStudent(student);
@@ -149,13 +150,14 @@ public class StudentController {
      * @param dto 注册必要信息
      * @return 认证JWT token
      */
-
+    @ActivityStat(module = "学生信息管理", userType = ActivityStat.UserType.STUDENT, statTypes = ActivityStat.StatType.DAILY)
     @PostMapping("/register")
     
     public ResponseEntity<TokenResponse> registerStudent(@RequestBody StudentBO dto) {
         return ResponseEntity.ok(studentService.registerStudent(dto));
     }
 
+    @ActivityStat(module = "学生信息管理", userType = ActivityStat.UserType.STUDENT, statTypes = ActivityStat.StatType.DAILY)
     @PutMapping("/{id}/change-username/{username}")
     @Operation(summary = "修改学生用户名", description = "执行该操作前，请先使用/auth/check-available-username检查可用用户名")
     public ResponseEntity<Map<String, Object>> changeUsername(@PathVariable("id") Long id, @PathVariable("username") String username) {
