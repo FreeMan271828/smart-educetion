@@ -6,9 +6,10 @@ import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.WeekFields;
+import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -21,7 +22,6 @@ public class StatsController {
 
     /**
      * 获取指定用户类型的统计摘要
-     *
      */
     @Operation(summary = "获取指定用户类型的统计摘要,userType只能为 TEACHER 或 STUDENT ,period只能为 daily 或 weekly")
     @GetMapping("/summary")
@@ -34,7 +34,7 @@ public class StatsController {
             @RequestParam(required = false) String weekId) {
 
         // 校验参数
-        if (!Arrays.asList("TEACHER", "STUDENT","ALL").contains(userType.toUpperCase())) {
+        if (!Arrays.asList("TEACHER", "STUDENT", "ALL").contains(userType.toUpperCase())) {
             throw new IllegalArgumentException("无效的用户类型，必须是 TEACHER 或 STUDENT 或 ALL");
         }
 
@@ -43,24 +43,62 @@ public class StatsController {
         }
 
         // 根据周期类型处理
-        String pattern;
         if ("daily".equalsIgnoreCase(period)) {
             if (date == null) date = LocalDate.now();
-            pattern = "stats:daily:" + date + ":" + userType + ":*";
+            String pattern = "stats:daily:" + date + ":" + userType + ":*";
             return collectStatsByPattern(pattern);
         } else {
-            if (weekId == null) {
-                weekId = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-'W'ww"));
+            // 获取本周起止日期（周一至周日）
+            LocalDate[] weekRange = getWeekRange(weekId);
+            LocalDate startDate = weekRange[0];
+            LocalDate endDate = weekRange[1];
+
+            // 收集本周所有日统计数据
+            Map<String, Integer> mergedModuleStats = new LinkedHashMap<>();
+            int totalUsage = 0;
+
+            for (LocalDate day = startDate; !day.isAfter(endDate); day = day.plusDays(1)) {
+                String dailyPattern = "stats:daily:" + day + ":" + userType + ":*";
+                StatSummary dailyStats = collectStatsByPattern(dailyPattern);
+
+                totalUsage += dailyStats.getTotalUsage();
+                dailyStats.getModuleStats().forEach((module, count) ->
+                        mergedModuleStats.merge(module, count, Integer::sum)
+                );
             }
-            pattern = "stats:weekly:" + weekId + ":" + userType + ":*";
-            return collectStatsByPattern(pattern);
+
+            return new StatSummary(totalUsage, mergedModuleStats);
         }
     }
 
     /**
+     * 获取本周起止日期（周一至周日）
+     * @param weekId 周ID（格式：yyyy-Www），如果为null则使用当前周
+     */
+    private LocalDate[] getWeekRange(String weekId) {
+        LocalDate baseDate;
+
+        if (weekId != null && !weekId.isEmpty()) {
+            // 解析周ID格式：2023-W43
+            int year = Integer.parseInt(weekId.substring(0, 4));
+            int week = Integer.parseInt(weekId.substring(6));
+
+            baseDate = LocalDate.of(year, 1, 1)
+                    .with(TemporalAdjusters.firstDayOfYear())
+                    .with(TemporalAdjusters.nextOrSame(DayOfWeek.MONDAY))
+                    .plusWeeks(week - 1);
+        } else {
+            baseDate = LocalDate.now();
+        }
+
+        LocalDate monday = baseDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        LocalDate sunday = baseDate.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
+
+        return new LocalDate[]{monday, sunday};
+    }
+
+    /**
      * 获取所有板块总使用次数（跨用户类型）
-     *
-     *
      */
     @Operation(summary = "获取所有板块总使用次数（跨用户类型）period只能为 daily 或 weekly")
     @GetMapping("/total")
@@ -71,18 +109,22 @@ public class StatsController {
             LocalDate date,
             @RequestParam(required = false) String weekId) {
 
-
         String pattern;
         if ("daily".equalsIgnoreCase(period)) {
             if (date == null) date = LocalDate.now();
             pattern = "stats:daily:" + date + ":*";
         } else {
-            if (weekId == null) {
-                weekId = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-'W'ww"));
+            LocalDate[] weekRange = getWeekRange(weekId);
+            LocalDate startDate = weekRange[0];
+            LocalDate endDate = weekRange[1];
+
+            int total = 0;
+            for (LocalDate day = startDate; !day.isAfter(endDate); day = day.plusDays(1)) {
+                String dailyPattern = "stats:daily:" + day + ":*";
+                total += collectTotalStatsByPattern(dailyPattern);
             }
-            pattern = "stats:weekly:" + weekId + ":*";
+            return new TotalUsageStats(period, total);
         }
-        period ="weekly";
         return new TotalUsageStats(period, collectTotalStatsByPattern(pattern));
     }
 
@@ -130,11 +172,8 @@ public class StatsController {
 
     /**
      * 根据键模式收集统计信息
-     *
-     * @param pattern Redis键匹配模式
      */
     private StatSummary collectStatsByPattern(String pattern) {
-        // 获取匹配键列表
         Set<String> keys = redisTemplate.execute((RedisCallback<Set<byte[]>>) connection ->
                         connection.keys(pattern.getBytes())
                 ).stream()
@@ -148,11 +187,9 @@ public class StatsController {
             Long count = redisTemplate.opsForValue().get(key);
             if (count == null) continue;
 
-            // 解析模块名称（键的最后一部分）
             String module = extractModuleFromKey(key);
             totalUsage += count;
 
-            // 统计各模块使用次数
             moduleStats.put(module, moduleStats.getOrDefault(module, 0) + count.intValue());
         }
 
@@ -183,7 +220,6 @@ public class StatsController {
      * 从键名中提取模块名称
      */
     private String extractModuleFromKey(String key) {
-        // 键格式：stats:[period]:[date/weekId]:[userType]:[module]
         String[] parts = key.split(":");
         if (parts.length >= 5) {
             return parts[parts.length - 1];
