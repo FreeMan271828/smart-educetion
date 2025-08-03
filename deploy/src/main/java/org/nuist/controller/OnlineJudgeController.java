@@ -24,7 +24,7 @@ public class OnlineJudgeController {
     @PostMapping("/submit")
     public ResponseEntity<JudgeResultDTO> submitJudgement(@RequestBody JudgeSubmissionDTO dto) {
         return ResponseEntity.ok(judgeService.judge(
-                dto.getLanguage(), dto.getCode(), dto.getInput(), dto.getExpectedOutput()
+                dto.getLanguage(), dto.getCode(), dto.getInputs(), dto.getExpectedOutputs()
         ));
     }
 }
