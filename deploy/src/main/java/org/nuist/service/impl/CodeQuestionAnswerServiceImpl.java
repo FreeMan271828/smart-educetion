@@ -85,7 +85,7 @@ public class CodeQuestionAnswerServiceImpl implements CodeQuestionAnswerService 
 
     @Override
     public CodeQuestionAnswerBO submit(Long studentId, Long codeQuestionId, String studentCode, String language) {
-        if (studentId == null || codeQuestionId == null || !StringUtils.hasText(language) || StringUtils.hasText(studentCode)) {
+        if (studentId == null || codeQuestionId == null || !StringUtils.hasText(language) || !StringUtils.hasText(studentCode)) {
             return null;
         }
         // 获取对应编程题实体
