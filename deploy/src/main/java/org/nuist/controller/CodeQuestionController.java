@@ -1,5 +1,6 @@
 package org.nuist.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,7 @@ public class CodeQuestionController {
     }
 
     @PostMapping("/save")
+    @Operation(summary = "保存一道编程题", description = "sample i/o为展示的样例输入输出，case i/o为评测判题使用的测试用例")
     public ResponseEntity<CodeQuestionBO> saveCodeQuestion(@RequestBody CodeQuestionBO codeQuestionBO) {
         return ResponseEntity.ok(codeQuestionService.insertCodeQuestion(codeQuestionBO));
     }
