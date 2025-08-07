@@ -44,6 +44,24 @@ public class CodeQuestionAnswerController {
         return ResponseEntity.ok(codeQuestionAnswerService.getStudentAnswersInCQuestion(cqId, studentId));
     }
 
+    @GetMapping("/best/code-question/{cqId}/student/{studentId}")
+    @Operation(summary = "查看一道编程题中，一位学生得分最高的一次提交记录")
+    public ResponseEntity<CodeQuestionAnswerBO> getBestAnswer(@PathVariable Long cqId, @PathVariable Long studentId) {
+        return ResponseEntity.ok(codeQuestionAnswerService.getStudentBestAnswerInCQuestion(cqId, studentId));
+    }
+
+    @GetMapping("/exam/{examId}/student/{studentId}")
+    @Operation(summary = "查看学生在测验中的所有编程题作答记录")
+    public ResponseEntity<List<CodeQuestionAnswerBO>> getAnswersInExam(@PathVariable Long examId, @PathVariable Long studentId) {
+        return ResponseEntity.ok(codeQuestionAnswerService.getAnswersInExam(examId, studentId, false));
+    }
+
+    @GetMapping("/best/exam/{examId}/student/{studentId}")
+    @Operation(summary = "查看学生在测验中，每个编程题最高分的作答记录")
+    public ResponseEntity<List<CodeQuestionAnswerBO>> getBestAnswersInExam(@PathVariable Long examId, @PathVariable Long studentId) {
+        return ResponseEntity.ok(codeQuestionAnswerService.getAnswersInExam(examId, studentId, true));
+    }
+
     @GetMapping("/is-accepted/code-question/{cqId}/student/{studentId}")
     @Operation(summary = "检测一位学生是否AC过一道编程题")
     public ResponseEntity<Boolean> isAccepted(@PathVariable Long cqId, @PathVariable Long studentId) {

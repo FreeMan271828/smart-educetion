@@ -1,5 +1,6 @@
 package org.nuist.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import lombok.RequiredArgsConstructor;
 import org.nuist.bo.CodeQuestionAnswerBO;
@@ -71,6 +72,45 @@ public class CodeQuestionAnswerServiceImpl implements CodeQuestionAnswerService 
     }
 
     @Override
+    public CodeQuestionAnswerBO getStudentBestAnswerInCQuestion(Long codeQuestionId, Long studentId) {
+        if (codeQuestionId == null || studentId == null) {
+            return null;
+        }
+        CodeQuestionAnswerPO answer = mapper.selectOne(
+                Wrappers.<CodeQuestionAnswerPO>lambdaQuery()
+                        .eq(CodeQuestionAnswerPO::getCodeQuestionId, codeQuestionId)
+                        .eq(CodeQuestionAnswerPO::getStudentId, studentId)
+                        .orderByDesc(CodeQuestionAnswerPO::getScore)
+                        .last("LIMIT 1")
+        );
+        return CodeQuestionAnswerBO.fromPO(answer);
+    }
+
+    @Override
+    public List<CodeQuestionAnswerBO> getAnswersInExam(Long examId, Long studentId, boolean best) {
+        if (examId == null || studentId == null) {
+            return new ArrayList<>();
+        }
+        List<CodeQuestionPO> codeQuestions = codeQuestionMapper.selectList(Wrappers.<CodeQuestionPO>lambdaQuery()
+                .eq(CodeQuestionPO::getExamId, examId));
+        List<CodeQuestionAnswerBO> answers = new ArrayList<>();
+
+        // 对Exam里的每道题目分别去查询
+        for (CodeQuestionPO codeQuestion : codeQuestions) {
+            LambdaQueryWrapper<CodeQuestionAnswerPO> wrapper = Wrappers.<CodeQuestionAnswerPO>lambdaQuery()
+                    .eq(CodeQuestionAnswerPO::getCodeQuestionId, codeQuestion.getId())
+                    .eq(CodeQuestionAnswerPO::getStudentId, studentId);
+            if (best) { // 是否仅取出每题的最高分记录
+                wrapper = wrapper.orderByDesc(CodeQuestionAnswerPO::getScore).last("LIMIT 1");
+//                answers.add(CodeQuestionAnswerBO.fromPO(mapper.selectOne(wrapper)));
+//                continue;
+            }
+            answers.addAll(convertToList(mapper.selectList(wrapper)));
+        }
+        return answers;
+    }
+
+    @Override
     public boolean isAccepted(Long studentId, Long codeQuestionId) {
         if (studentId == null || codeQuestionId == null) {
             return false;
@@ -108,9 +148,12 @@ public class CodeQuestionAnswerServiceImpl implements CodeQuestionAnswerService 
                 codeQuestionPO.getCaseOutputs()
         );
         po.setStatus(result.getStatus());
-        po.setCaseAccepted((int) result.getStatusPerCase().stream().filter("ACCEPTED"::equals).count());
-        po.setCaseTotal(codeQuestionPO.getCaseOutputs().size());
+        int caseAccepted = (int) result.getStatusPerCase().stream().filter("ACCEPTED"::equals).count();
+        int caseTotal = codeQuestionPO.getCaseOutputs().size();
+        po.setCaseAccepted(caseAccepted);
+        po.setCaseTotal(caseTotal);
         po.setTimeMs(result.getTimeMs());
+        po.setScore((double) (caseAccepted / caseTotal) * codeQuestionPO.getScorePoints());
 
         mapper.insert(po);
         return CodeQuestionAnswerBO.fromPO(po);

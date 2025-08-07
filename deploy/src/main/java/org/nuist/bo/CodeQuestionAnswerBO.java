@@ -21,6 +21,7 @@ public class CodeQuestionAnswerBO {
     private String studentCode;
     private Integer caseAccepted;
     private Integer caseTotal;
+    private Double score;
     private String status;
     private Long timeMs;
     private LocalDateTime submitTime;
@@ -34,6 +35,7 @@ public class CodeQuestionAnswerBO {
                 .studentCode(po.getStudentCode())
                 .caseAccepted(po.getCaseAccepted())
                 .caseTotal(po.getCaseTotal())
+                .score(po.getScore())
                 .status(po.getStatus())
                 .timeMs(po.getTimeMs())
                 .submitTime(po.getSubmitTime())
@@ -49,6 +51,7 @@ public class CodeQuestionAnswerBO {
         po.setStudentCode(this.studentCode);
         po.setCaseAccepted(this.caseAccepted);
         po.setCaseTotal(this.caseTotal);
+        po.setScore(this.score);
         po.setStatus(this.status);
         po.setTimeMs(this.timeMs);
         po.setSubmitTime(this.submitTime);

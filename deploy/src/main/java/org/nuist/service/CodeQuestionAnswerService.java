@@ -36,6 +36,23 @@ public interface CodeQuestionAnswerService {
     List<CodeQuestionAnswerBO> getStudentAnswersInCQuestion(Long codeQuestionId, Long studentId);
 
     /**
+     * 获取学生在一道编程题里得分最高的提交
+     * @param codeQuestionId 编程题ID
+     * @param studentId 学生ID
+     * @return 结果
+     */
+    CodeQuestionAnswerBO getStudentBestAnswerInCQuestion(Long codeQuestionId, Long studentId);
+
+    /**
+     * 获取学生在一个Exam的所有题目的作答记录
+     * @param examId 测验ID
+     * @param studentId 学生ID
+     * @param best 是否仅取出每题的最优记录
+     * @return 结果列表
+     */
+    List<CodeQuestionAnswerBO> getAnswersInExam(Long examId, Long studentId, boolean best);
+
+    /**
      * 检测一个学生是否已经AC了一道编程题
      * @param studentId 学生ID
      * @param codeQuestionId 编程题ID

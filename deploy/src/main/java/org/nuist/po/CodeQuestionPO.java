@@ -34,6 +34,11 @@ public class CodeQuestionPO {
     private String description;
 
     /**
+     * 题目分数
+     */
+    private Integer scorePoints;
+
+    /**
      * JSON格式字符串（预期string[]）：用于题目展示的样例输入
      */
     @TableField(typeHandler = JsonbListTypeHandler.class, jdbcType = JdbcType.OTHER)

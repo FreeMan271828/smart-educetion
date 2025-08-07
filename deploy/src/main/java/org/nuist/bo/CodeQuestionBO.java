@@ -19,6 +19,7 @@ public class CodeQuestionBO {
     private Long examId;
     private String title;
     private String description;
+    private Integer scorePoints;
     private List<String> sampleInputs;
     private List<String> sampleOutputs;
     private List<String> caseInputs;
@@ -32,6 +33,7 @@ public class CodeQuestionBO {
                 .id(po.getId())
                 .title(po.getTitle())
                 .description(po.getDescription())
+                .scorePoints(po.getScorePoints())
                 .sampleInputs(po.getSampleInputs())
                 .sampleOutputs(po.getSampleOutputs())
                 .caseInputs(po.getCaseInputs())
@@ -49,6 +51,7 @@ public class CodeQuestionBO {
         po.setExamId(examId);
         po.setTitle(title);
         po.setDescription(description);
+        po.setScorePoints(scorePoints);
         po.setSampleInputs(sampleInputs);
         po.setSampleOutputs(sampleOutputs);
         po.setCaseInputs(caseInputs);

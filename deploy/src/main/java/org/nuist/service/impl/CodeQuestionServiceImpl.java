@@ -70,6 +70,9 @@ public class CodeQuestionServiceImpl implements CodeQuestionService {
         if (StringUtils.hasText(codeQuestion.getDescription())) {
             po.setDescription(codeQuestion.getDescription());
         }
+        if (codeQuestion.getScorePoints() != null) {
+            po.setScorePoints(codeQuestion.getScorePoints());
+        }
         if (codeQuestion.getSampleInputs() != null) {
             po.setSampleInputs(codeQuestion.getSampleInputs());
         }

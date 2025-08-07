@@ -45,6 +45,11 @@ public class CodeQuestionAnswerPO {
     private Integer caseTotal;
 
     /**
+     * 得分
+     */
+    private Double score;
+
+    /**
      * 评测结果
      */
     private String status;
