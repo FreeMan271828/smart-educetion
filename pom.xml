@@ -104,6 +104,11 @@
 				<artifactId>problem-spring-web-starter</artifactId>
 				<version>0.29.1</version>
 			</dependency>
+			<dependency>
+				<groupId>io.minio</groupId>
+				<artifactId>minio</artifactId>
+				<version>8.5.7</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 

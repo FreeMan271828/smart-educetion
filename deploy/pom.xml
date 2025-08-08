@@ -78,6 +78,10 @@
             <artifactId>postgresql</artifactId>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>io.minio</groupId>
+            <artifactId>minio</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
