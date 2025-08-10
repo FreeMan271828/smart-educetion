@@ -1,5 +1,7 @@
 package org.nuist.service;
 
+import org.nuist.bo.LearningPlanBO;
+
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -14,48 +16,26 @@ public interface LearningPlanService {
      * @param studentId 学生ID
      * @param targetGoal 学习目标
      * @param timeFrame 时间框架(天)
-     * @param courseIds 课程ID列表(可选)
-     * @param knowledgeIds 重点知识点ID列表(可选)
+
      * @return 学习计划
      */
     Map<String, Object> generateLearningPlan(Long studentId, String targetGoal, Integer timeFrame, 
-                                           List<Long> courseIds, List<Long> knowledgeIds);
+                                           Long courseId);
     
-    /**
-     * 根据课程名称生成学习计划
-     * @param studentId 学生ID
-     * @param targetGoal 学习目标
-     * @param timeFrame 时间框架(天)
-     * @param courseNames 课程名称列表
-     * @return 学习计划
-     */
-    Map<String, Object> generateLearningPlanByCourseName(Long studentId, String targetGoal, 
-                                                       Integer timeFrame, List<String> courseNames);
-    
-    /**
-     * 根据知识点名称生成学习计划
-     * @param studentId 学生ID
-     * @param targetGoal 学习目标
-     * @param timeFrame 时间框架(天)
-     * @param knowledgeNames 知识点名称列表
-     * @return 学习计划
-     */
-    Map<String, Object> generateLearningPlanByKnowledgeName(Long studentId, String targetGoal, 
-                                                          Integer timeFrame, List<String> knowledgeNames);
-    
+
     /**
      * 获取学生的当前学习计划
      * @param studentId 学生ID
      * @return 当前学习计划
      */
-    Map<String, Object> getCurrentLearningPlan(Long studentId);
+    List<LearningPlanBO> getCurrentLearningPlan(Long studentId);
     
     /**
      * 获取学生的历史学习计划
      * @param studentId 学生ID
      * @return 历史学习计划列表
      */
-    List<Map<String, Object>> getLearningPlanHistory(Long studentId);
+    List<LearningPlanBO> getLearningPlanHistory(Long studentId);
     
     /**
      * 根据关键词搜索学习计划
@@ -63,25 +43,16 @@ public interface LearningPlanService {
      * @param keywords 关键词
      * @return 匹配的学习计划列表
      */
-    List<Map<String, Object>> searchLearningPlans(Long studentId, String keywords);
+    List<LearningPlanBO> searchLearningPlans(Long studentId, String keywords);
     
-    /**
-     * 更新学习计划进度
-     * @param planId 计划ID
-     * @param activityId 活动ID
-     * @param status 完成状态
-     * @param feedback 反馈信息(可选)
-     * @return 更新后的计划详情
-     */
-    Map<String, Object> updatePlanProgress(String planId, String activityId, String status, String feedback);
-    
+
     /**
      * 获取特定日期的学习计划内容
      * @param studentId 学生ID
      * @param date 日期
      * @return 指定日期的学习计划内容
      */
-    List<Map<String, Object>> getDailyPlanActivities(Long studentId, LocalDate date);
+    List<LearningPlanBO> getDailyPlanActivities(Long studentId, LocalDate date);
     
     /**
      * 根据计划名称和日期获取学习计划内容
@@ -114,4 +85,13 @@ public interface LearningPlanService {
      * @return 匹配的资源列表
      */
     List<Map<String, Object>> searchPlanResources(Long studentId, String keywords);
+
+    LearningPlanBO updatePlan(LearningPlanBO learningPlanBO);
+
+
+    List<LearningPlanBO> getifCompletedLearningPlans(Long studentId, boolean b);
+
+    boolean deletePlan(Long planId);
+
+    LearningPlanBO addPlan(LearningPlanBO learningPlanBO);
 } 

@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.sql.Wrapper;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,6 +35,22 @@ public class KnowledgeServiceImpl extends ServiceImpl<KnowledgeMapper, Knowledge
             return null;
         }
         Knowledge knowledge = knowledgeMapper.selectById(id);
+        if (knowledge == null) {
+            return null;
+        }
+        return KnowledgeBO.fromKnowledge(knowledge);
+    }
+
+
+    public KnowledgeBO getKnowledgeByName(String name) {
+        if (name == null) {
+            return null;
+        }
+        Knowledge knowledge = knowledgeMapper.selectOne(
+                Wrappers.<Knowledge>lambdaQuery()
+                        .eq(Knowledge::getName, name)
+                ,false
+        );
         if (knowledge == null) {
             return null;
         }

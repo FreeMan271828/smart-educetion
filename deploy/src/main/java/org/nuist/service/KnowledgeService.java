@@ -14,6 +14,9 @@ public interface KnowledgeService {
      */
     KnowledgeBO getKnowledgeById(Long id);
 
+    KnowledgeBO getKnowledgeByName(String name);
+
+
     /**
      * 查询课程中的全部知识点
      * @param courseId 目标课程ID

@@ -1,211 +1,350 @@
 package org.nuist.service.impl;
 
-import org.nuist.service.LearningPlanService;
-import org.nuist.service.LearningProgressService;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.nuist.bo.LearningPlanBO;
+import org.nuist.mapper.LearningPlanMapper;
+import org.nuist.po.LearningPlanPO;
+import org.nuist.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.web.reactive.function.client.WebClient;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 个性化学习计划服务实现类
  */
 @Service
-public class LearningPlanServiceImpl implements LearningPlanService {
+public class LearningPlanServiceImpl extends ServiceImpl<LearningPlanMapper, LearningPlanPO> implements LearningPlanService {
+    private final WebClient webClient;
+    private final LearningPlanMapper learningPlanMapper;
+    private final CourseService courseService;
+    private final KnowledgeService knowledgeService;
+    private final KnowledgeUnitService knowledgeUnitService;
+    private final SubjectService subjectService;
     
     @Autowired
     private LearningProgressService learningProgressService;
-    
-    @Override
-    public Map<String, Object> generateLearningPlan(Long studentId, String targetGoal, Integer timeFrame, 
-                                                  List<Long> courseIds, List<Long> knowledgeIds) {
-        if (studentId == null || !StringUtils.hasText(targetGoal) || timeFrame == null || timeFrame <= 0) {
-            return new HashMap<>();
-        }
-        
-        Map<String, Object> learningPlan = new HashMap<>();
-        String planId = generatePlanId();
-        
-        // 计划基本信息
-        learningPlan.put("planId", planId);
-        learningPlan.put("studentId", studentId);
-        learningPlan.put("targetGoal", targetGoal);
-        learningPlan.put("timeFrame", timeFrame);
-        learningPlan.put("createdAt", LocalDateTime.now());
-        
-        // 生成每日活动
-        List<Map<String, Object>> dailyActivities = generateDailyActivities(
-                studentId, timeFrame, courseIds, knowledgeIds);
-        learningPlan.put("dailyActivities", dailyActivities);
-        
-        // 添加资源推荐
-        List<Map<String, Object>> recommendedResources = generateRecommendedResources(
-                studentId, courseIds, knowledgeIds);
-        learningPlan.put("recommendedResources", recommendedResources);
-        
-        // 保存计划（实际实现中可能需要保存到数据库）
-        
-        return learningPlan;
+
+    public LearningPlanServiceImpl(WebClient webClient, LearningPlanMapper learningPlanMapper, CourseService courseService, KnowledgeService knowledgeService, KnowledgeUnitService knowledgeUnitService, SubjectService subjectService) {
+        this.webClient = webClient;
+        this.learningPlanMapper = learningPlanMapper;
+        this.courseService = courseService;
+        this.knowledgeService = knowledgeService;
+        this.knowledgeUnitService = knowledgeUnitService;
+        this.subjectService = subjectService;
     }
-    
+
+
+
+
+
+
     @Override
-    public Map<String, Object> generateLearningPlanByCourseName(Long studentId, String targetGoal, 
-                                                              Integer timeFrame, List<String> courseNames) {
-        if (studentId == null || !StringUtils.hasText(targetGoal) || 
-                timeFrame == null || timeFrame <= 0 || courseNames == null || courseNames.isEmpty()) {
-            return new HashMap<>();
+    @Transactional
+    public Map<String, Object> generateLearningPlan(Long studentId, String targetGoal, Integer timeFrame,
+                                                    Long courseId) {
+
+
+        // 1. 参数校验
+        validateParams(studentId, targetGoal, timeFrame, courseId);
+
+        // 2. 获取课程名称（用于后续提示词）
+
+            String courseName = courseService.getCourseById(courseId).getName();
+
+            String subjectName = new String();
+            //处理课程没有对应科目的情况
+        if(subjectService.getSubjectByCourseId(courseId)!=null ) {
+            subjectName = subjectService.getSubjectByCourseId(courseId).getName();
         }
-        
-        // 转换课程名称为课程ID
-        List<Long> courseIds = convertCourseNamesToIds(courseNames);
-        
-        return generateLearningPlan(studentId, targetGoal, timeFrame, courseIds, null);
+        else{
+            subjectName = courseName;
+        }
+
+        // 3. 调用知识点分析服务 [关键变更点]
+        Map<String, Object> knowledgeResult = knowledgeUnitService.analyzeTargetKnowledge(targetGoal, subjectName);
+        List<Map<String, Object>> knowledgeUnits = (List<Map<String, Object>>) knowledgeResult.get("knowledge_units");
+        List<String> knowledgeNames = knowledgeUnits.stream()
+                .map(unit -> (String) unit.get("name"))
+                .collect(Collectors.toList());
+
+        // 4. 构建AI提示词（基于知识点） [关键变更点]
+        String prompt = buildKnowledgeBasedPrompt(targetGoal, timeFrame, knowledgeNames);
+
+        // 5. 调用RAG服务
+        Map<String, Object> aiResponse = callRAGService(prompt);
+
+        // 6. 保存到数据库
+        LearningPlanPO savedPlan = saveLearningPlanToDB(studentId, targetGoal, timeFrame, aiResponse);
+
+        // 7. 构造返回结果（包含知识点信息）
+        return buildResponseMap(savedPlan, aiResponse, knowledgeUnits);
     }
-    
-    @Override
-    public Map<String, Object> generateLearningPlanByKnowledgeName(Long studentId, String targetGoal, 
-                                                                 Integer timeFrame, List<String> knowledgeNames) {
-        if (studentId == null || !StringUtils.hasText(targetGoal) || 
-                timeFrame == null || timeFrame <= 0 || knowledgeNames == null || knowledgeNames.isEmpty()) {
-            return new HashMap<>();
+
+    //--- 参数校验（新增courseId校验） ---//
+    private void validateParams(Long studentId, String targetGoal, Integer timeFrame, Long courseId) {
+        if (studentId == null || !StringUtils.hasText(targetGoal)
+                || timeFrame == null || timeFrame <= 0 || courseId == null) {
+            throw new IllegalArgumentException("参数错误：studentId、targetGoal、timeFrame和courseId必须有效");
         }
-        
-        // 转换知识点名称为知识点ID
-        List<Long> knowledgeIds = convertKnowledgeNamesToIds(knowledgeNames);
-        
-        return generateLearningPlan(studentId, targetGoal, timeFrame, null, knowledgeIds);
     }
-    
-    @Override
-    public Map<String, Object> getCurrentLearningPlan(Long studentId) {
-        if (studentId == null) {
-            return new HashMap<>();
-        }
-        
-        // 实际实现中应该从数据库查询当前生效的学习计划
-        // 这里返回模拟数据
-        Map<String, Object> currentPlan = new HashMap<>();
-        currentPlan.put("planId", "plan-123456");
-        currentPlan.put("studentId", studentId);
-        currentPlan.put("targetGoal", "掌握Java编程");
-        currentPlan.put("timeFrame", 30);
-        currentPlan.put("createdAt", LocalDateTime.now().minusDays(5));
-        currentPlan.put("progress", 25); // 25% 完成率
-        
-        List<Map<String, Object>> dailyActivities = new ArrayList<>();
-        Map<String, Object> activity = new HashMap<>();
-        activity.put("day", 1);
-        activity.put("activities", generateSampleActivities());
-        dailyActivities.add(activity);
-        
-        currentPlan.put("dailyActivities", dailyActivities);
-        
-        return currentPlan;
+
+    //--- 重构提示词构建方法 ---//
+    private String buildKnowledgeBasedPrompt(String targetGoal, int timeFrame, List<String> knowledgeNames) {
+        StringBuilder prompt = new StringBuilder();
+        prompt.append("你是一名资深教育规划师，需基于指定知识点创建可执行的个性化学习计划。\n")
+                .append("**必须严格遵守以下要求：**\n")
+                .append("1. 请分析指定知识点中哪些与计划相关，目标包含的知识点应该被尽量安排进计划中，并按难度顺序由易到难安排学习计划\n")
+                .append("2. 每天安排1-4个知识点（根据复杂度调整）与目标关联度高的知识点优先安排学习，关联度低的安排在后部或者不安排\n")
+                .append("3. 输出为纯JSON格式，结构如下：\n")
+                .append("{\n")
+                .append("  \"planName\": \"计划名称\",\n")
+                .append("  \"dailyActivities\": [\n")
+                .append("    {\"day\": 1, \"knowledgePoints\": [\"知识点A\", \"知识点B\"], \"resources\": [\"资源1\", \"资源2\"]},\n")
+                .append("    ...\n")
+                .append("  ],\n")
+                .append("  \"recommendedResources\": {\n")
+                .append("    \"video\": [\"视频资源1\"],\n")
+                .append("    \"article\": [\"文章资源1\"]\n")
+                .append("  }\n")
+                .append("}\n\n")
+                .append("**任务参数：**\n")
+                .append("- 学习目标: ").append(targetGoal).append("\n")
+                .append("- 时间周期: ").append(timeFrame).append("天\n")
+                .append("- 需要覆盖目标有关知识点，无关知识点无需理会\n")
+                .append(String.join(", ", knowledgeNames)).append("\n\n")
+                .append("**每日计划示例：**\n")
+                .append("第1天: 基础概念学习（知识点A, 知识点B）\n")
+                .append("第2天: 进阶应用（知识点C）\n");
+
+        return prompt.toString();
     }
-    
-    @Override
-    public List<Map<String, Object>> getLearningPlanHistory(Long studentId) {
-        if (studentId == null) {
-            return new ArrayList<>();
-        }
-        
-        // 实际实现中应该从数据库查询历史学习计划
-        // 这里返回模拟数据
-        List<Map<String, Object>> historyPlans = new ArrayList<>();
-        
-        Map<String, Object> plan1 = new HashMap<>();
-        plan1.put("planId", "plan-history-1");
-        plan1.put("studentId", studentId);
-        plan1.put("targetGoal", "SQL数据库入门");
-        plan1.put("timeFrame", 14);
-        plan1.put("createdAt", LocalDateTime.now().minusDays(60));
-        plan1.put("completedAt", LocalDateTime.now().minusDays(46));
-        plan1.put("completionRate", 85); // 85% 完成率
-        historyPlans.add(plan1);
-        
-        Map<String, Object> plan2 = new HashMap<>();
-        plan2.put("planId", "plan-history-2");
-        plan2.put("studentId", studentId);
-        plan2.put("targetGoal", "Web前端基础");
-        plan2.put("timeFrame", 21);
-        plan2.put("createdAt", LocalDateTime.now().minusDays(100));
-        plan2.put("completedAt", LocalDateTime.now().minusDays(79));
-        plan2.put("completionRate", 92); // 92% 完成率
-        historyPlans.add(plan2);
-        
-        return historyPlans;
+
+    //--- 重构返回结果构建方法（加入知识点信息） ---//
+    private Map<String, Object> buildResponseMap(LearningPlanPO savedPlan,
+                                                 Map<String, Object> aiResponse,
+                                                 List<Map<String, Object>> knowledgeUnits) {
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("planId", savedPlan.getPlanId());
+        response.put("studentId", savedPlan.getStudentId());
+        response.put("planName", savedPlan.getName());
+        response.put("beginAt", savedPlan.getBeginAt());
+        response.put("endAt", savedPlan.getEndAt());
+        response.put("dailyActivities", aiResponse.get("dailyActivities"));
+        response.put("recommendedResources", aiResponse.get("recommendedResources"));
+        response.put("knowledgeUnits", knowledgeUnits); // 新增知识点信息
+        return response;
     }
-    
-    @Override
-    public List<Map<String, Object>> searchLearningPlans(Long studentId, String keywords) {
-        if (studentId == null || !StringUtils.hasText(keywords)) {
-            return new ArrayList<>();
+
+    //--- RAG服务调用（关键修改）---//
+    private Map<String, Object> callRAGService(String prompt) {
+        // 构建请求体
+        Map<String, Object> requestBody = new HashMap<>();
+        Map<String, String> message = new HashMap<>();
+        message.put("role", "user");
+        message.put("content", prompt);
+        requestBody.put("messages", Collections.singletonList(message));
+
+        // 调用RAG服务
+        Map<String, Object> response = webClient.post()
+                .uri("/chat/plain")
+                .bodyValue(requestBody)
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
+                .block(Duration.ofSeconds(90));
+
+        // 解析AI响应（带预处理和安全解析）
+        String aiResponse = (String) response.get("answer");
+        try {
+            return parseAndCleanJsonResponse(aiResponse);
+        } catch (Exception e) {
+            throw new RuntimeException("AI响应解析失败: " + aiResponse, e);
         }
-        
-        // 实际实现中应该从数据库搜索匹配关键词的学习计划
-        // 这里返回模拟数据
-        List<Map<String, Object>> matchedPlans = new ArrayList<>();
-        
-        // 假设关键词为"Java"
-        if (keywords.toLowerCase().contains("java")) {
-            Map<String, Object> plan = new HashMap<>();
-            plan.put("planId", "plan-java-123");
-            plan.put("studentId", studentId);
-            plan.put("targetGoal", "Java编程入门到精通");
-            plan.put("timeFrame", 45);
-            plan.put("createdAt", LocalDateTime.now().minusDays(30));
-            plan.put("progress", 40); // 40% 完成率
-            matchedPlans.add(plan);
-        }
-        
-        return matchedPlans;
     }
-    
-    @Override
-    public Map<String, Object> updatePlanProgress(String planId, String activityId, String status, String feedback) {
-        if (!StringUtils.hasText(planId) || !StringUtils.hasText(activityId) || !StringUtils.hasText(status)) {
-            return new HashMap<>();
+
+    //--- 新增：JSON响应处理 ---//
+    private Map<String, Object> parseAndCleanJsonResponse(String rawResponse) throws JsonProcessingException {
+        // 空响应处理
+        if (rawResponse == null || rawResponse.isBlank()) {
+            return Collections.emptyMap();
         }
-        
-        // 实际实现中应该更新数据库中的学习计划进度
-        // 这里返回模拟数据
-        Map<String, Object> updatedPlan = new HashMap<>();
-        updatedPlan.put("planId", planId);
-        updatedPlan.put("activityId", activityId);
-        updatedPlan.put("status", status);
-        if (StringUtils.hasText(feedback)) {
-            updatedPlan.put("feedback", feedback);
-        }
-        updatedPlan.put("updatedAt", LocalDateTime.now());
-        
-        // 模拟更新后的完成率
-        updatedPlan.put("newCompletionRate", 45); // 假设更新后达到45%
-        
-        return updatedPlan;
+
+        // 清洗响应
+        String cleanJson = rawResponse.trim()
+                .replaceFirst("^```(json)?", "")  // 去除开头的```json或```
+                .replaceFirst("```$", "")         // 去除结尾的```
+                .trim();
+
+        // 安全解析
+        return parseJsonSafely(cleanJson);
     }
-    
-    @Override
-    public List<Map<String, Object>> getDailyPlanActivities(Long studentId, LocalDate date) {
-        if (studentId == null || date == null) {
-            return new ArrayList<>();
+
+    //--- 新增：安全解析JSON ---//
+    private Map<String, Object> parseJsonSafely(String json) throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        mapper.configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
+        mapper.configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
+
+        // 使用树模型解析
+        JsonNode rootNode = mapper.readTree(json);
+        return mapper.convertValue(rootNode, new TypeReference<Map<String, Object>>() {});
+    }
+
+    @Transactional
+    protected LearningPlanPO saveLearningPlanToDB(Long studentId, String targetGoal, int timeFrame,
+                                                  Map<String, Object> aiResponse) {
+        LearningPlanPO plan = new LearningPlanPO();
+        plan.setStudentId(studentId);
+        plan.setName((String) aiResponse.get("planName"));
+        plan.setBeginAt(LocalDateTime.now());
+        plan.setEndAt(LocalDateTime.now().plusDays(timeFrame));
+        plan.setCompleted(false);
+        plan.setCreatedAt(LocalDateTime.now());
+        plan.setUpdatedAt(LocalDateTime.now());
+
+        // 序列化完整的AI响应
+        try {
+            plan.setContent(new ObjectMapper().writeValueAsString(aiResponse));
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("JSON序列化失败", e);
         }
-        
-        // 实际实现中应该从数据库查询指定日期的学习计划活动
-        // 这里返回模拟数据
-        
-        // 只返回当天和未来日期的计划
-        if (date.isBefore(LocalDate.now())) {
-            return new ArrayList<>(); // 过去的日期返回空列表
+
+        learningPlanMapper.insert(plan);
+        return plan;
+    }
+
+
+
+
+
+
+    /**
+     * 获取当前学习计划（已开始未结束）
+     */
+    public List<LearningPlanBO> getCurrentLearningPlan(Long studentId) {
+        LocalDateTime now = LocalDateTime.now();
+        QueryWrapper<LearningPlanPO> query = new QueryWrapper<>();
+        query.eq("student_id", studentId)
+                .le("begin_at", now)  // 开始时间 <= 当前时间
+                .ge("end_at", now);   // 结束时间 >= 当前时间
+
+        return this.list(query).stream()
+                .map(LearningPlanBO::fromLearningPlanPO)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 获取历史学习计划（已结束）
+     */
+    public List<LearningPlanBO> getLearningPlanHistory(Long studentId) {
+        LocalDateTime now = LocalDateTime.now();
+        QueryWrapper<LearningPlanPO> query = new QueryWrapper<>();
+        query.eq("student_id", studentId)
+                .lt("end_at", now);    // 结束时间 < 当前时间
+
+        return this.list(query).stream()
+                .map(LearningPlanBO::fromLearningPlanPO)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 按名称模糊搜索学习计划
+     * 返回 List<LearningPlanBO> 并使用 from 方法转换
+     */
+    public List<LearningPlanBO> searchLearningPlans(Long studentId, String keywords) {
+        QueryWrapper<LearningPlanPO> query = new QueryWrapper<>();
+        query.eq("student_id", studentId)
+                .like("name", keywords);  // 名称模糊匹配
+
+        return this.list(query).stream()
+                .map(LearningPlanBO::fromLearningPlanPO) // 使用 BO 类的 from 方法转换
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 更新学习计划
+     */
+    public LearningPlanBO updatePlan(LearningPlanBO learningPlanBO) {
+        // 1. 获取现有计划
+        LearningPlanPO existingPO = getById(learningPlanBO.getPlanId());
+        if (existingPO == null) {
+            throw new RuntimeException("学习计划不存在");
         }
-        
-        return generateSampleActivities();
+
+        // 2. 部分字段更新（只处理非空字段）
+        LambdaUpdateWrapper<LearningPlanPO> updateWrapper = Wrappers.lambdaUpdate();
+        updateWrapper.set(LearningPlanPO::getUpdatedAt, LocalDateTime.now()); // 总是更新修改时间
+
+        // 检查并设置需要更新的字段
+        if (learningPlanBO.getPlanName() != null) {
+            updateWrapper.set(LearningPlanPO::getName, learningPlanBO.getPlanName());
+        }
+        if (learningPlanBO.getContent() != null) {
+            updateWrapper.set(LearningPlanPO::getContent, learningPlanBO.getContent());
+        }
+        if (learningPlanBO.getBeginAt() != null) {
+            updateWrapper.set(LearningPlanPO::getBeginAt, learningPlanBO.getBeginAt());
+        }
+        if (learningPlanBO.getEndAt() != null) {
+            updateWrapper.set(LearningPlanPO::getEndAt, learningPlanBO.getEndAt());
+        }
+        if (learningPlanBO.isCompletedSet()) {  // 新增检查方法
+            updateWrapper.set(LearningPlanPO::isCompleted, learningPlanBO.isCompleted());
+        } else {
+            // 未传值时保持原值
+            updateWrapper.set(LearningPlanPO::isCompleted, existingPO.isCompleted());
+        }
+
+        // 3. 设置更新条件
+        updateWrapper.eq(LearningPlanPO::getPlanId, learningPlanBO.getPlanId());
+
+        // 4. 执行更新
+        boolean success = update(updateWrapper);
+
+        if (success) {
+            return LearningPlanBO.fromLearningPlanPO(getById(learningPlanBO.getPlanId()));
+        } else {
+            throw new RuntimeException("更新学习计划失败");
+        }
+    }
+
+    /**
+     * 获取特定日期的学习计划内容
+     * 要求：date必须在begin_at和end_at之间（含当天）
+     */
+    public List<LearningPlanBO> getDailyPlanActivities(Long studentId, LocalDate date) {
+        // 将LocalDate转换为当天的开始时间（00:00）和结束时间（23:59）
+        LocalDateTime startOfDay = date.atStartOfDay();
+        LocalDateTime endOfDay = date.atTime(LocalTime.MAX);
+
+        QueryWrapper<LearningPlanPO> query = new QueryWrapper<>();
+        query.eq("student_id", studentId)
+                .le("begin_at", endOfDay)   // 开始时间 <= 当天结束时间
+                .ge("end_at", startOfDay);  // 结束时间 >= 当天开始时间
+
+        return list(query).stream()
+                .map(LearningPlanBO::fromLearningPlanPO)
+                .collect(Collectors.toList());
     }
     
     @Override
@@ -281,15 +420,37 @@ public class LearningPlanServiceImpl implements LearningPlanService {
         
         return new ArrayList<>();
     }
-    
-    /**
-     * 生成计划ID
-     * @return 计划ID
-     */
-    private String generatePlanId() {
-        return "plan-" + UUID.randomUUID().toString().substring(0, 8);
+
+    @Override
+    public List<LearningPlanBO> getifCompletedLearningPlans(Long studentId, boolean b) {
+        QueryWrapper<LearningPlanPO> query = new QueryWrapper<>();
+        query.eq("student_id", studentId)
+                .eq("completed", b);
+        return this.list(query).stream()
+                .map(LearningPlanBO::fromLearningPlanPO) // 使用 BO 类的 from 方法转换
+                .collect(Collectors.toList());
+
     }
-    
+
+    @Override
+    public boolean deletePlan(Long planId) {
+        int result= baseMapper.deleteById(planId);
+        return result>0;
+    }
+
+    @Override
+    public LearningPlanBO addPlan(LearningPlanBO learningPlanBO) {
+
+        LearningPlanPO learningPlanPO = LearningPlanBO.toLearningPlanPO(learningPlanBO);
+        boolean success =baseMapper.insert(learningPlanPO)>0;
+        if (success) {
+            return LearningPlanBO.fromLearningPlanPO(learningPlanPO);
+        } else {
+            throw new RuntimeException("添加学习计划失败");
+        }
+    }
+
+
     /**
      * 生成每日活动
      * @param studentId 学生ID
