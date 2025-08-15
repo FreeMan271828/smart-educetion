@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class KnowledgeUnitBO {
-    private long id;
+    private Long id;
 
     private String name;
 
