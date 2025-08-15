@@ -11,9 +11,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class LearningPlanBO {
 
-    private long planId;
+    private Long planId;
 
-    private long studentId;
+    private Long studentId;
 
     private String planName;
 

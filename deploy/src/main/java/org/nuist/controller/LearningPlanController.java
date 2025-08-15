@@ -46,7 +46,6 @@ public class LearningPlanController  {
      * @param studentId 学生ID
      * @param targetGoal 学习目标
      * @param timeFrame 时间范围（天数）
-
      * @return 学习计划
      */
     @Operation(summary = "ai生成学习计划,并持久化到数据库")
@@ -71,7 +70,8 @@ public class LearningPlanController  {
             @RequestBody LearningPlanBO learningPlanBO) {
         return ResponseEntity.ok(learningPlanService.addPlan(learningPlanBO));
     }
-    
+
+
 
 
     
