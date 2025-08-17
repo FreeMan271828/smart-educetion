@@ -23,4 +23,6 @@ public interface SubjectService {
     SubjectBO getSubjectByCourseId(Long courseId);
 
     Map<String, Object> deleteSubjectCourseRelation(Long subjectId, Long courseId);
+
+    List<SubjectBO> getAllSubjects();
 }

@@ -114,4 +114,9 @@ public class SubjectServiceImpl extends ServiceImpl<SubjectMapper, SubjectPO> im
             return Map.of("message","删除关系失败");
         }
     }
+
+    @Override
+    public List<SubjectBO> getAllSubjects() {
+        return subjectMapper.selectList(null).stream().map(SubjectBO::fromSubjectPO).toList();
+    }
 }

@@ -25,6 +25,12 @@ public class SubjectController {
         return subjectService.searchSubjects(keywords);
     }
 
+    @Operation(summary = "获取全部课程")
+    @GetMapping("/all")
+    public List<SubjectBO> getAllSubjects() {
+        return subjectService.getAllSubjects();
+    }
+
     @Operation(summary = "获取课程")
     @GetMapping("/{id}")
     public SubjectBO getSubjectById(@PathVariable Long id) {
