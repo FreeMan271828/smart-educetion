@@ -1,5 +1,6 @@
 package org.nuist.service;
 
+import org.nuist.bo.CourseBO;
 import org.nuist.bo.SubjectBO;
 
 import java.util.List;
@@ -18,7 +19,7 @@ public interface SubjectService {
 
     Map<String, Object> addSubjectCourseRelation(Long subjectId, Long courseId);
 
-    List<SubjectBO> getCoursesBySubjectId(Long subjectId);
+    List<CourseBO> getCoursesBySubjectId(Long subjectId);
 
     SubjectBO getSubjectByCourseId(Long courseId);
 

@@ -3,9 +3,12 @@ package org.nuist.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.nuist.bo.CourseBO;
 import org.nuist.bo.SubjectBO;
+import org.nuist.mapper.CourseMapper;
 import org.nuist.mapper.SubjectCourseMapper;
 import org.nuist.mapper.SubjectMapper;
+import org.nuist.po.CoursePO;
 import org.nuist.po.SubjectCoursePO;
 import org.nuist.po.SubjectPO;
 import org.nuist.service.SubjectService;
@@ -23,6 +26,9 @@ public class SubjectServiceImpl extends ServiceImpl<SubjectMapper, SubjectPO> im
 
     @Autowired
     private SubjectCourseMapper subjectCourseMapper;
+
+    @Autowired
+    private CourseMapper courseMapper;
 
     @Override
     public List<SubjectBO> searchSubjects(String keywords) {
@@ -77,19 +83,59 @@ public class SubjectServiceImpl extends ServiceImpl<SubjectMapper, SubjectPO> im
                 .subjectId(subjectId)
                 .courseId(courseId)
                 .build();
-        if(subjectCourseMapper.insert(subjectCoursePO)>0){
-            return Map.of("message","添加关系成功");
+        //检查关系是否存在
+        if(subjectCourseMapper.selectOne(
+                Wrappers.<SubjectCoursePO>lambdaQuery()
+                .eq(SubjectCoursePO::getSubjectId, subjectId)
+                .eq(SubjectCoursePO::getCourseId, courseId)) != null){
+            return Map.of("message","关系已存在");
         }
-        else{
-            return Map.of("message","添加关系失败");
+        else {
+            if (subjectCourseMapper.insert(subjectCoursePO) > 0) {
+                return Map.of("message", "添加关系成功");
+            } else {
+                return Map.of("message", "添加关系失败");
+            }
         }
     }
 
     @Override
-    public List<SubjectBO> getCoursesBySubjectId(Long subjectId) {
-        List<Long> courseIds = subjectCourseMapper.selectList(Wrappers.<SubjectCoursePO>lambdaQuery().eq(SubjectCoursePO::getSubjectId, subjectId)).stream().map(SubjectCoursePO::getCourseId).toList();
-        return courseIds.stream().map(courseId -> SubjectBO.fromSubjectPO(subjectMapper.selectById(courseId))).toList();
+    public List<CourseBO> getCoursesBySubjectId(Long subjectId) {
+        List<Long> courseIds = subjectCourseMapper.selectList(
+                        Wrappers.<SubjectCoursePO>lambdaQuery()
+                                .select(SubjectCoursePO::getCourseId)
+                                .eq(SubjectCoursePO::getSubjectId, subjectId)
+                ).stream()
+                .map(SubjectCoursePO::getCourseId)
+                .collect(Collectors.toList());
+
+        // 2. 直接根据course_id字段查询课程
+        List<CoursePO> courses = courseMapper.selectList(
+                Wrappers.<CoursePO>lambdaQuery()
+                        .in(CoursePO::getId, courseIds)
+        );
+
+        // 3. 转换为业务对象（解决空值和类型问题）
+        return courses.stream()
+                .map(course -> {
+                    CourseBO courseBO = new CourseBO();
+                    courseBO.setId(course.getId());
+                    courseBO.setName(course.getName());
+                    courseBO.setCode(course.getCode());
+                    courseBO.setDescription(course.getDescription());
+                    courseBO.setCredit(course.getCredit());
+                    courseBO.setCategory(course.getCategory());
+                    courseBO.setCreateTime(course.getCreateTime());
+                    courseBO.setUpdateTime(course.getUpdateTime());
+                    courseBO.setStatus(course.getStatus());
+
+                    return courseBO;
+
+                })
+                .collect(Collectors.toList());
     }
+
+
 
     @Override
     public SubjectBO getSubjectByCourseId(Long courseId) {

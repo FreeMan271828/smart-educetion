@@ -2,6 +2,7 @@ package org.nuist.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import org.nuist.bo.CourseBO;
 import org.nuist.bo.SubjectBO;
 import org.nuist.service.SubjectService;
 import org.springframework.web.bind.annotation.*;
@@ -67,7 +68,7 @@ public class SubjectController {
 
     @Operation(summary = "获取课程和科目的关联关系")
     @GetMapping("/getCoursesBySubjectId/{subjectId}")
-    public List<SubjectBO> getCoursesBySubjectId(@PathVariable Long subjectId) {
+    public List<CourseBO> getCoursesBySubjectId(@PathVariable Long subjectId) {
         return subjectService.getCoursesBySubjectId(subjectId);
     }
 

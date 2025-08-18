@@ -21,6 +21,8 @@ import java.util.Map;
 public class ProblemKnowledgeUnitServiceImpl extends ServiceImpl<ProblemKnowledgeUnitMapper, ProblemKnowledgeUnitPO> implements ProblemKnowledgeUnitService {
     @Autowired
     private KnowledgeUnitMapper knowledgeUnitMapper;
+    @Autowired
+    private ProblemKnowledgeUnitMapper problemKnowledgeUnitMapper;
 
     @Override
     public Map<String, Object> getAllKnowledgeUnitIdByProblemId(Long problemId) {
@@ -46,6 +48,9 @@ public class ProblemKnowledgeUnitServiceImpl extends ServiceImpl<ProblemKnowledg
     public Map<String, Object> addProblemKnowledgeUnit(ProblemKnowledgeUnitBO problemKnowledgeUnitBO) {
 
         ProblemKnowledgeUnitPO problemKnowledgeUnitPO = ProblemKnowledgeUnitBO.toPO(problemKnowledgeUnitBO);
+        if(problemKnowledgeUnitMapper.selectCount(new QueryWrapper<ProblemKnowledgeUnitPO>().eq("problem_id", problemKnowledgeUnitPO.getProblemId()).eq("knowledge_unit_id", problemKnowledgeUnitPO.getKnowledgeUnitId())) > 0){
+            return Map.of("添加失败，该关系已存在", false);
+        }
         baseMapper.insert(problemKnowledgeUnitPO);
         return Map.of("problemKnowledgeUnitId", problemKnowledgeUnitPO.getId());
     }
@@ -72,14 +77,19 @@ public class ProblemKnowledgeUnitServiceImpl extends ServiceImpl<ProblemKnowledg
         for(ProblemKnowledgeUnitBO BO : problemKnowledgeUnitBOList){
             ProblemKnowledgeUnitPO PO = ProblemKnowledgeUnitBO.toPO(BO);
             PO.setId( null);
-            int insert = baseMapper.insert(PO);
-            if(insert > 0){
-                successIds.add(PO.getProblemId());
-            }else{
+            if (problemKnowledgeUnitMapper.selectCount(new QueryWrapper<ProblemKnowledgeUnitPO>().eq("problem_id", PO.getProblemId()).eq("knowledge_unit_id", PO.getKnowledgeUnitId())) > 0) {
                 failedIds.add(PO.getProblemId());
             }
+            else {
+                int insert = baseMapper.insert(PO);
+                if (insert > 0) {
+                    successIds.add(PO.getProblemId());
+                } else {
+                    failedIds.add(PO.getProblemId());
+                }
+            }
         }
-        return Map.of( "successCount", successIds.size(), "failedCount", failedIds.size());
+        return Map.of( "successCount", successIds.size(), "failedCount", failedIds.size(), "failedIds", failedIds);
 
     }
 
